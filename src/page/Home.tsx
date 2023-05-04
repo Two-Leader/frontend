@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import React, { useState } from 'react';
-import { List, ListItem } from '@mui/material';
+import { List } from '@mui/material';
 import StudyRoomItem from 'component/StudyRoomItem';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
@@ -28,9 +28,17 @@ export default function Home() {
     },
   ]);
 
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const handleModalClose = () => setShowModal(false);
-  const handleModalShow = () => setShowModal(true);
+  const [showCreateStudyRoomModal, setShowCreateStudyRoomModal] =
+    useState<boolean>(false);
+  const handleCreateStudyRoomModalClose = () =>
+    setShowCreateStudyRoomModal(false);
+  const handleCreateStudyRoomModalShow = () =>
+    setShowCreateStudyRoomModal(true);
+
+  const [showCreateUserModal, setShowCreateUserModal] =
+    useState<boolean>(false);
+  const handleCreateUserModalClose = () => setShowCreateUserModal(false);
+  const handleCreateUserModalShow = () => setShowCreateUserModal(true);
 
   return (
     <div className="Home-wrap">
@@ -41,13 +49,44 @@ export default function Home() {
               key={studyRoomItem.roomUuid}
               roomUuid={studyRoomItem.roomUuid}
               roomName={studyRoomItem.roomName}
+              handleCreateUserModalShow={handleCreateUserModalShow}
             />
           ))}
+          <Modal show={showCreateUserModal} onHide={handleCreateUserModalClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>Enter User Information</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form>
+                <Form.Group>
+                  <Form.Label>이름</Form.Label>
+                  <Form.Control type="text" autoFocus id="userName" />
+                </Form.Group>
+              </Form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                className="btn_close"
+                onClick={handleCreateUserModalClose}
+              >
+                닫기
+              </Button>
+
+              <Button type="submit" onClick={handleCreateUserModalClose}>
+                확인
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </List>
       </div>
       <div className="studyRoomCreate">
-        <Button onClick={handleModalShow}>Create StudyRoom</Button>
-        <Modal show={showModal} onHide={handleModalClose}>
+        <Button onClick={handleCreateStudyRoomModalShow}>
+          Create StudyRoom
+        </Button>
+        <Modal
+          show={showCreateStudyRoomModal}
+          onHide={handleCreateStudyRoomModalClose}
+        >
           <Modal.Header closeButton>
             <Modal.Title>Enter studyRoom Information</Modal.Title>
           </Modal.Header>
@@ -60,11 +99,14 @@ export default function Home() {
             </Form>
           </Modal.Body>
           <Modal.Footer>
-            <Button className="btn_close" onClick={handleModalClose}>
+            <Button
+              className="btn_close"
+              onClick={handleCreateStudyRoomModalClose}
+            >
               닫기
             </Button>
 
-            <Button type="submit" onClick={handleModalClose}>
+            <Button type="submit" onClick={handleCreateStudyRoomModalClose}>
               확인
             </Button>
           </Modal.Footer>
