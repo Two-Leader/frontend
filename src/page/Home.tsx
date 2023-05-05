@@ -16,8 +16,15 @@ interface StudyRoomProps {
 
 export default function Home() {
   const [studyRoomItems, setStudyRoomItems] = useState<StudyRoomProps[]>([]);
+  const [studyRoomNameValue, setStudyRoomNameValue] = useState<string>('');
+  const [showCreateStudyRoomModal, setShowCreateStudyRoomModal] =
+    useState<boolean>(false);
+  const handleCreateStudyRoomModalClose = () =>
+    setShowCreateStudyRoomModal(false);
+  const handleCreateStudyRoomModalShow = () =>
+    setShowCreateStudyRoomModal(true);
 
-  const videoData = useCallback(() => {
+  const studyRoomDatas = useCallback(() => {
     axios
       .get('http://localhost:8080/api/v1/studies')
       .then((response) => {
@@ -31,15 +38,24 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    videoData();
-  }, [videoData]);
+    studyRoomDatas();
+  }, [studyRoomDatas]);
 
-  const [showCreateStudyRoomModal, setShowCreateStudyRoomModal] =
-    useState<boolean>(false);
-  const handleCreateStudyRoomModalClose = () =>
-    setShowCreateStudyRoomModal(false);
-  const handleCreateStudyRoomModalShow = () =>
-    setShowCreateStudyRoomModal(true);
+  const createStudyRoom = () => {
+    handleCreateStudyRoomModalClose();
+    axios
+      .post('http://localhost:8080/api/v1/studies', {
+        roomName: studyRoomNameValue,
+      })
+      .then((response) => {
+        if (response.status === 201) {
+          studyRoomDatas();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <div className="Home-wrap">
@@ -69,7 +85,12 @@ export default function Home() {
             <Form>
               <Form.Group>
                 <Form.Label>방 이름</Form.Label>
-                <Form.Control type="text" autoFocus id="roomName" />
+                <Form.Control
+                  type="text"
+                  autoFocus
+                  id="roomName"
+                  onChange={(e) => setStudyRoomNameValue(e.target.value)}
+                />
               </Form.Group>
             </Form>
           </Modal.Body>
@@ -81,8 +102,8 @@ export default function Home() {
               닫기
             </Button>
 
-            <Button type="submit" onClick={handleCreateStudyRoomModalClose}>
-              확인
+            <Button type="submit" onClick={createStudyRoom}>
+              방 생성
             </Button>
           </Modal.Footer>
         </Modal>
