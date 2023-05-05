@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import Button from '@mui/material/Button';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from 'react-router-dom';
 
 interface StudyRoomProps {
   roomUuid: string;
@@ -35,11 +36,6 @@ export default function Home() {
   const handleCreateStudyRoomModalShow = () =>
     setShowCreateStudyRoomModal(true);
 
-  const [showCreateUserModal, setShowCreateUserModal] =
-    useState<boolean>(false);
-  const handleCreateUserModalClose = () => setShowCreateUserModal(false);
-  const handleCreateUserModalShow = () => setShowCreateUserModal(true);
-
   return (
     <div className="Home-wrap">
       <div className="studyRoomContainer">
@@ -49,34 +45,8 @@ export default function Home() {
               key={studyRoomItem.roomUuid}
               roomUuid={studyRoomItem.roomUuid}
               roomName={studyRoomItem.roomName}
-              handleCreateUserModalShow={handleCreateUserModalShow}
             />
           ))}
-          <Modal show={showCreateUserModal} onHide={handleCreateUserModalClose}>
-            <Modal.Header closeButton>
-              <Modal.Title>Enter User Information</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Form>
-                <Form.Group>
-                  <Form.Label>이름</Form.Label>
-                  <Form.Control type="text" autoFocus id="userName" />
-                </Form.Group>
-              </Form>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button
-                className="btn_close"
-                onClick={handleCreateUserModalClose}
-              >
-                닫기
-              </Button>
-
-              <Button type="submit" onClick={handleCreateUserModalClose}>
-                확인
-              </Button>
-            </Modal.Footer>
-          </Modal>
         </List>
       </div>
       <div className="studyRoomCreate">
