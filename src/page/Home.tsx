@@ -1,13 +1,11 @@
-import { v4 } from 'uuid';
 import React, { useCallback, useEffect, useState } from 'react';
-import { List } from '@mui/material';
+import { Box, CssBaseline, List } from '@mui/material';
 import StudyRoomItem from 'component/StudyRoomItem';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import Button from '@mui/material/Button';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from 'lib/BaseUrl';
 
 interface StudyRoomProps {
   roomUuid: string;
@@ -17,16 +15,13 @@ interface StudyRoomProps {
 export default function Home() {
   const [studyRoomItems, setStudyRoomItems] = useState<StudyRoomProps[]>([]);
   const [studyRoomNameValue, setStudyRoomNameValue] = useState<string>('');
-  const [showCreateStudyRoomModal, setShowCreateStudyRoomModal] =
-    useState<boolean>(false);
-  const handleCreateStudyRoomModalClose = () =>
-    setShowCreateStudyRoomModal(false);
-  const handleCreateStudyRoomModalShow = () =>
-    setShowCreateStudyRoomModal(true);
+  const [showStudyRoomModal, setShowStudyRoomModal] = useState<boolean>(false);
+  const handleStudyRoomModalClose = () => setShowStudyRoomModal(false);
+  const handleStudyRoomModalShow = () => setShowStudyRoomModal(true);
 
   const studyRoomDatas = useCallback(() => {
     axios
-      .get('http://localhost:8080/api/v1/studies')
+      .get(`${BASE_URL}/studies`)
       .then((response) => {
         if (response.status === 200) {
           setStudyRoomItems(response.data.data);
@@ -41,10 +36,10 @@ export default function Home() {
     studyRoomDatas();
   }, [studyRoomDatas]);
 
-  const createStudyRoom = () => {
-    handleCreateStudyRoomModalClose();
+  const StudyRoom = () => {
+    handleStudyRoomModalClose();
     axios
-      .post('http://localhost:8080/api/v1/studies', {
+      .post(`${BASE_URL}/studies`, {
         roomName: studyRoomNameValue,
       })
       .then((response) => {
@@ -58,8 +53,9 @@ export default function Home() {
   };
 
   return (
-    <div className="Home-wrap">
-      <div className="studyRoomContainer">
+    <Box>
+      <CssBaseline />
+      <Box>
         <List>
           {studyRoomItems.map((studyRoomItem) => (
             <StudyRoomItem
@@ -69,15 +65,11 @@ export default function Home() {
             />
           ))}
         </List>
-      </div>
-      <div className="studyRoomCreate">
-        <Button onClick={handleCreateStudyRoomModalShow}>
-          Create StudyRoom
-        </Button>
-        <Modal
-          show={showCreateStudyRoomModal}
-          onHide={handleCreateStudyRoomModalClose}
-        >
+      </Box>
+      <Box>
+        <Button onClick={handleStudyRoomModalShow}>Create StudyRoom</Button>
+        {/* ============== Modal ============== */}
+        <Modal show={showStudyRoomModal} onHide={handleStudyRoomModalClose}>
           <Modal.Header closeButton>
             <Modal.Title>Enter studyRoom Information</Modal.Title>
           </Modal.Header>
@@ -95,19 +87,17 @@ export default function Home() {
             </Form>
           </Modal.Body>
           <Modal.Footer>
-            <Button
-              className="btn_close"
-              onClick={handleCreateStudyRoomModalClose}
-            >
+            <Button className="btn_close" onClick={handleStudyRoomModalClose}>
               닫기
             </Button>
 
-            <Button type="submit" onClick={createStudyRoom}>
+            <Button type="submit" onClick={StudyRoom}>
               방 생성
             </Button>
           </Modal.Footer>
         </Modal>
-      </div>
-    </div>
+        {/* ============== Modal ============== */}
+      </Box>
+    </Box>
   );
 }
