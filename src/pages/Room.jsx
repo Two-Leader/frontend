@@ -15,63 +15,77 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/pagination";
+import { Pagination } from "swiper";
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-const cards = [1, 2, 3];
-const theme = createTheme();
+import './Album.css'
+import people from '../assets/img.jpg';
 
 export default function Room() {
     const [show, setShow] = useState(false);
-
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
 
   return (
-    <ThemeProvider theme={theme} >
-      <CssBaseline />
-      <AppBar position="relative" >
-        <Toolbar>
-          <CameraIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" color="inherit" noWrap>
-            Two Leader
-          </Typography>
-          {/* <div >
-            <Button variant="contained">로그인</Button>
-            <Button variant="outlined">방 생성</Button>
-          </div> */}
-        </Toolbar>
-      </AppBar>
-      <main>
-        {/* Hero unit */}
-        <Box
-          sx={{
-            bgcolor: 'background.paper',
-            pt: 8,
-            pb: 6,
-          }}
-        >
-        <div align="center">
-          <Webcam/>
-          <Webcam/>
-        </div>  
-        </Box>
-        
-      </main>
-      {/* Footer */}
-      <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
-        <Typography variant="h6" align="center" gutterBottom>
-          Footer
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          align="center"
-          color="text.secondary"
-          component="p"
-        >
-          Something here to give the footer a purpose!
-        </Typography>
-      </Box>
-      {/* End footer */}
-    </ThemeProvider>
+    <Swiper
+    slidesPerView={4}
+    centeredSlides={true}
+    spaceBetween={30}
+    grabCursor={true}
+    pagination={{
+      clickable: true,
+    }}
+    modules={[Pagination]}
+    className="mySwiper"
+  >
+    <SwiperSlide>
+      <div className = "slide-container">
+      <div className = "slide-content">
+        <div className="card-wrapper">
+          <div className="card">
+            <div className="image-content">
+              <span className="overlay"></span>
+
+                <div className="card-image">
+                  <img src={people} alt = "1" className ="card-img"/>
+                </div>
+            </div>
+
+                <div className="card-content">
+                  <h2 className ="name">Jung</h2>
+                  <p className="description">This is a media card. You can use this section to describe the content.</p>
+                  <button className="button">View More</button>
+                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </SwiperSlide>
+    <SwiperSlide>
+      <div className = "slide-container">
+      <div className = "slide-content">
+        <div className="card-wrapper">
+          <div className="card">
+            <div className="image-content">
+              <span className="overlay"></span>
+
+                <div className="card-image">
+                  <img src={people} alt = "1" className ="card-img"/>
+                </div>
+            </div>
+
+                <div className="card-content">
+                  <h2 className ="name">Jung</h2>
+                  <p className="description">This is a media card. You can use this section to describe the content.</p>
+                  <button className="button">View More</button>
+                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </SwiperSlide>
+    </Swiper>
   );
 }

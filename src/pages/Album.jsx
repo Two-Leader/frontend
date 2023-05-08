@@ -54,7 +54,6 @@ export default function Album() {
         </Toolbar>
         
       </AppBar>
-      
       <main>
         
         <Box
