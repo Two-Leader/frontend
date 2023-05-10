@@ -1,25 +1,77 @@
 import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Webcam from 'react-webcam';
 import { Box } from '@mui/material';
 import { Button, Form, Modal } from 'react-bootstrap';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { BASE_URL } from 'lib/BaseUrl';
-import { useMatch, useParams } from 'react-router-dom';
+import { useMatch } from 'react-router-dom';
+import SockJS from 'sockjs-client';
+import * as StompJs from '@stomp/stompjs';
+import { BASE_URL, BASE_URL_WS } from 'lib/BaseUrl';
 
 export default function StudyRoom() {
   const [showUserModal, setShowUserModal] = useState<boolean>(false);
   const [userNameValue, setUserNameValue] = useState<string>('');
   const roomUuid = useMatch('/studyRoom/:roomUuid')?.params.roomUuid;
+  const client = useRef<any>({});
+
   useEffect(() => {
     if (roomUuid) {
       if (sessionStorage.getItem(`${roomUuid}`) === null) {
         setShowUserModal(true);
       }
+      connect();
     }
+    return () => disconnect();
   }, []);
 
+  // Socket Connect
+  const connect = () => {
+    // 연결할 때
+    client.current = new StompJs.Client({
+      brokerURL: `${BASE_URL_WS}/websocket`,
+
+      onConnect: () => {
+        subscribe();
+      },
+      onStompError: (frame) => {
+        console.error(frame);
+      },
+    });
+
+    client.current.activate(); // 클라이언트 활성화
+  };
+
+  const disconnect = () => {
+    // 연결이 끊겼을 때
+    client.current.deactivate();
+  };
+
+  const subscribe = () => {
+    // 연결 후 구독
+    client.current.subscribe(
+      `/topic/${roomUuid}`,
+      (response: { body: string }) => {
+        const jsonBody = JSON.parse(response.body);
+        console.log(jsonBody);
+      },
+    );
+  };
+
+  const publish = () => {
+    if (!client.current.connected) {
+      return;
+    }
+    // 메시지 보내기
+    client.current.publish({
+      destination: `/app/${roomUuid}`,
+      body: JSON.stringify({
+        type: 'hi',
+      }),
+    });
+  };
+
+  // User Modal
   const createUser = () => {
     if (userNameValue === '') {
       alert('사용자이름을 작성하지 않았습니다.');
@@ -47,7 +99,7 @@ export default function StudyRoom() {
   return (
     <Box>
       <CssBaseline />
-
+      <Button onClick={publish} />
       <Box>
         <Webcam />
       </Box>

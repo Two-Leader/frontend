@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import { ListItem } from '@mui/material';
-import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 interface StudyRoomProps {
   roomUuid: string;
