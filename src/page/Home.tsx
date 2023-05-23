@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, CssBaseline, List } from '@mui/material';
+import { Box, Button, CssBaseline, List } from '@mui/material';
 import StudyRoomItem from 'component/StudyRoomItem';
-import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal';
-import Button from '@mui/material/Button';
 import axios from 'axios';
 import { BASE_URL } from 'lib/BaseUrl';
+import { Form, Modal } from 'react-bootstrap';
 
 interface StudyRoomProps {
   roomUuid: string;

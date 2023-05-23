@@ -12,7 +12,7 @@ interface StudyRoomProps {
 export default function StudyRoomItem({ roomUuid, roomName }: StudyRoomProps) {
   const navigate = useNavigate();
   const goStudyRoom = (target: any) => {
-    navigate(`/studyRoom/${target.value}`);
+    navigate(`/studyRooms/${target.value}/users`);
   };
 
   return (
