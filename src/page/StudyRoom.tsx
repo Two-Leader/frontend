@@ -23,17 +23,26 @@ const videoConstraints = {
   facingMode: 'user',
 };
 
+const peerConnectionConfig = {
+  iceServers: [
+    { urls: 'stun:stun.stunprotocol.org:3478' },
+    { urls: 'stun:stun.l.google.com:19302' },
+  ],
+};
+
 export default function StudyRoom() {
   const roomUuid = useMatch('/studyRooms/:roomUuid')?.params.roomUuid;
   const [userUuid, setUserUuid] = useState<string>('');
   const [videoStatus, setVideoStatus] = useState<boolean>(true);
   const [audioStatus, setAudioStatus] = useState<boolean>(true);
   const webCamRef = useRef<any>();
+  const peerWebCamRef = useRef<any>();
   const client = useRef<any>({});
-  // const [myPeerConnection, setMyPeerConnection] = useState<any>(null);
-  const myFace = document.getElementById('myFace');
+  // const [remoteUser, setRemoteUser] = useState<boolean>(false);
+
   let myPeerConnection: RTCPeerConnection;
-  let myStream;
+  let myStream: MediaStream;
+  let myWebCam: HTMLVideoElement;
 
   const navigate = useNavigate();
 
@@ -41,27 +50,23 @@ export default function StudyRoom() {
     if (roomUuid) {
       findUseruuid();
 
-      axios
-        .get(`${BASE_URL}/studies/${roomUuid}`)
-        .then((response) => {
-          if (response.data.data.checkUser) {
-            console.log('connecting different user');
-          }
-        })
-        .catch((err) => {
-          if (err.response.status === 400) {
-            alert('존재하지 않는 방입니다.');
-            navigate('/');
-          }
-        });
-
-      connect();
+      axios.get(`${BASE_URL}/studies/${roomUuid}`).catch((err) => {
+        if (err.response.status === 400) {
+          alert('존재하지 않는 방입니다.');
+          navigate('/');
+        }
+      });
     }
+    myWebCam = document.getElementById('myWebCam') as HTMLVideoElement;
+    getMedia();
+    socketConnect();
 
-    return () => disconnect();
+    return () => socketDisconnect();
   }, []);
-  // getMedia();
-  makeConnection();
+
+  const onUserMedia = useCallback(() => {
+    createPeerConnection();
+  }, []);
 
   const findUseruuid = () => {
     const userUuidFromSession = sessionStorage.getItem(`${roomUuid}`);
@@ -73,15 +78,30 @@ export default function StudyRoom() {
     return userUuidFromSession;
   };
 
+  async function getMedia() {
+    try {
+      myStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      if (myWebCam && myStream) {
+        myWebCam.srcObject = myStream;
+        await createPeerConnection();
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   /* ============= WebSocket 관련 ============ */
   // Socket Connect
-  const connect = () => {
+  const socketConnect = () => {
     // 연결할 때
     client.current = new Client({
       brokerURL: `${BASE_URL_WS}/websocket`,
 
       onConnect: () => {
-        subscribe();
+        socketSubscribe();
       },
       onStompError: (frame) => {
         console.error(frame);
@@ -91,12 +111,12 @@ export default function StudyRoom() {
     client.current.activate(); // 클라이언트 활성화
   };
 
-  const disconnect = () => {
+  const socketDisconnect = () => {
     // 연결이 끊겼을 때
     client.current.deactivate();
   };
 
-  const subscribe = () => {
+  const socketSubscribe = () => {
     // 연결 후 구독
     client.current.subscribe(`/topic/${roomUuid}`, handleWebSocketMessage);
   };
@@ -104,6 +124,7 @@ export default function StudyRoom() {
   const handleWebSocketMessage = (message: IMessage) => {
     const payload = JSON.parse(message.body);
     if (payload && payload.from !== findUseruuid()) {
+      console.log('sucess', payload.type);
       const handler = messageHandlers[payload.type];
       if (handler) {
         handler(payload);
@@ -115,103 +136,169 @@ export default function StudyRoom() {
     () => ({
       offer: (message) => {
         console.log(message);
+        if (message.sdp) {
+          try {
+            console.log(myPeerConnection);
+            myPeerConnection
+              .setRemoteDescription(new RTCSessionDescription(message.sdp))
+              .then(() => {
+                return myPeerConnection.createAnswer();
+              })
+              .then((answer) => {
+                return myPeerConnection.setLocalDescription(answer);
+              })
+              .then(() => {
+                client.current.publish({
+                  destination: `/app/${roomUuid}/offer`,
+                  body: JSON.stringify({
+                    from: findUseruuid(),
+                    type: 'answer',
+                    sdp: myPeerConnection.localDescription,
+                  }),
+                });
+              });
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      },
+      answer: (message) => {
+        console.log(myPeerConnection, message);
+        console.log(peerWebCamRef.current.srcObject);
+        console.log(webCamRef.current.srcObject);
+        try {
+          myPeerConnection.setRemoteDescription(
+            new RTCSessionDescription(message.sdp),
+          );
+        } catch (err) {
+          console.log(err);
+        }
+      },
+      ice: (ice) => {
+        console.log(ice);
+        myPeerConnection.addIceCandidate(ice);
       },
     }),
     [],
   );
 
-  const handleNegotiationNeededEvent = () => {
-    console.log(myPeerConnection);
-    if (!client.current.connected) {
-      return;
-    }
-    myPeerConnection
-      .createOffer()
-      .then(() => {
-        client.current.publish({
-          destination: `/app/${roomUuid}/offer`,
-          body: JSON.stringify({
-            from: userUuid,
-            type: 'offer',
-            sdp: myPeerConnection.localDescription,
-          }),
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
   /* ============= WebSocket 관련 ============ */
 
   /* ============= WebRTC 관련 ============ */
 
-  // async function getMedia() {
-  //   try {
-  //     myStream = await navigator.mediaDevices.getUserMedia({
-  //       audio: true,
-  //       video: true,
-  //     });
-  //     // console.log(myStream);
-  //     if(myFace){
-  //       myFace.srcObject = myStream;
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // }
-
-  function makeConnection() {
-    myPeerConnection = new RTCPeerConnection();
-    if (webCamRef.current && webCamRef.current.unmounted === false) {
-      webCamRef.current.stream
+  const createPeerConnection = () => {
+    if (myStream) {
+      myPeerConnection = new RTCPeerConnection(peerConnectionConfig);
+      myPeerConnection.onicecandidate = handleICECandidateEvent;
+      myPeerConnection.ontrack = handleTrackEvent;
+      myStream
         .getTracks()
         .forEach((track: MediaStreamTrack) =>
-          myPeerConnection.addTrack(track, webCamRef.current.stream),
+          myPeerConnection.addTrack(track, myStream),
         );
+      handleNegotiationNeededEvent();
+    }
+  };
+
+  function handleNegotiationNeededEvent() {
+    if (client.current.connected && myPeerConnection) {
+      myPeerConnection
+        .createOffer()
+        .then((offer) => {
+          return myPeerConnection.setLocalDescription(offer);
+        })
+        .then(() => {
+          client.current.publish({
+            destination: `/app/${roomUuid}/offer`,
+            body: JSON.stringify({
+              from: findUseruuid(),
+              type: 'offer',
+              sdp: myPeerConnection.localDescription,
+            }),
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   }
+
+  function handleICECandidateEvent(event: { candidate: any }) {
+    if (client.current.connected && event.candidate) {
+      client.current.publish({
+        from: findUseruuid(),
+        type: 'ice',
+        candidate: event.candidate,
+      });
+    }
+  }
+
+  function handleTrackEvent(event: any) {
+    const [stream] = event.streams;
+    const peerWebCam = document.getElementById(
+      'remoteUser',
+    ) as HTMLVideoElement;
+    peerWebCam.srcObject = stream;
+
+    // console.log(peerWebCam);
+  }
+
   /* ============= WebRTC 관련 ============ */
 
   return (
     <Box>
       <CssBaseline />
-      <Button onClick={handleNegotiationNeededEvent} />
       <IconButton
         onClick={() => {
-          webCamRef.current.stream
-            .getAudioTracks()
-            .forEach((track: { enabled: boolean }) => {
-              // eslint-disable-next-line no-param-reassign
-              track.enabled = !track.enabled;
-              setAudioStatus(!audioStatus);
-            });
+          myStream.getAudioTracks().forEach((track: { enabled: boolean }) => {
+            // eslint-disable-next-line no-param-reassign
+            track.enabled = !track.enabled;
+            setAudioStatus(!audioStatus);
+          });
+          console.log(myStream.getAudioTracks());
         }}
       >
         {audioStatus ? <Mic /> : <MicOff />}
       </IconButton>
       <IconButton
         onClick={() => {
-          webCamRef.current.stream
-            .getVideoTracks()
-            .forEach((track: { enabled: boolean }) => {
-              // eslint-disable-next-line no-param-reassign
-              track.enabled = !track.enabled;
-              setVideoStatus(!videoStatus);
-            });
+          myStream.getVideoTracks().forEach((track: { enabled: boolean }) => {
+            // eslint-disable-next-line no-param-reassign
+            track.enabled = !track.enabled;
+            setVideoStatus(!videoStatus);
+          });
+          console.log(myStream.getVideoTracks());
         }}
       >
         {videoStatus ? <Videocam /> : <VideocamOff />}
       </IconButton>
       <Box>
-        <Webcam
-          id="myFace"
+        <video id="myWebCam" autoPlay playsInline ref={webCamRef}>
+          <track
+            kind="captions"
+            src="captions_en.vtt"
+            srcLang="en"
+            label="English"
+            default
+          />
+        </video>
+        {/* <Webcam
           mirrored
           audio
           ref={webCamRef}
+          onUserMedia={onUserMedia}
           videoConstraints={videoConstraints}
-        />
-        {/* <video id="myFace" autoPlay playsInline /> */}
+        /> */}
       </Box>
+      <video id="remoteUser" autoPlay playsInline ref={peerWebCamRef}>
+        <track
+          kind="captions"
+          src="captions_en.vtt"
+          srcLang="en"
+          label="English"
+          default
+        />
+      </video>
     </Box>
   );
 }
