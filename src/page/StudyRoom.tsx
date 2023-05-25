@@ -32,19 +32,12 @@ const peerConnectionConfig = {
 
 export default function StudyRoom() {
   const roomUuid = useMatch('/studyRooms/:roomUuid')?.params.roomUuid;
-  const [userUuid, setUserUuid] = useState<string>('');
   const [videoStatus, setVideoStatus] = useState<boolean>(true);
   const [audioStatus, setAudioStatus] = useState<boolean>(true);
   const myWebCamRef = useRef<HTMLVideoElement>(null);
   const peerWebCamRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<any>({});
   const pcRef = useRef<RTCPeerConnection>();
-  // const [remoteUser, setRemoteUser] = useState<boolean>(false);
-
-  let myPeerConnection: RTCPeerConnection;
-  // let myStream: MediaStream;
-  let myWebCam: HTMLVideoElement;
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,9 +71,6 @@ export default function StudyRoom() {
         if (err.response.status === 400) {
           alert('존재하지 않는 방입니다.');
           navigate('/');
-        } else {
-          alert('무슨 문제가 생김');
-          console.log(err);
         }
       });
 
@@ -97,9 +87,7 @@ export default function StudyRoom() {
 
   const findUseruuid = () => {
     const userUuidFromSession = sessionStorage.getItem(`${roomUuid}`);
-    if (userUuidFromSession) {
-      setUserUuid(userUuidFromSession);
-    } else {
+    if (!userUuidFromSession) {
       navigate(`/studyRooms/${roomUuid}/users`);
     }
     return userUuidFromSession;
@@ -117,8 +105,8 @@ export default function StudyRoom() {
       if (!(pcRef.current && socketRef.current)) {
         return;
       }
-      stream.getTracks().forEach((track) => {
-        if (!pcRef.current) {
+      stream.getTracks().forEach((track: MediaStreamTrack) => {
+        if (!(pcRef.current && stream)) {
           return;
         }
         pcRef.current.addTrack(track, stream);
@@ -155,14 +143,13 @@ export default function StudyRoom() {
           return;
         }
         try {
-          await pcRef.current.setRemoteDescription(
-            new RTCSessionDescription(message.sdp),
-          );
+          const offer = new RTCSessionDescription(message.sdp);
+          await pcRef.current.setRemoteDescription(offer);
           const answer = await pcRef.current.createAnswer();
           await pcRef.current.setLocalDescription(answer);
           console.log('sent the answer');
           socketRef.current.publish({
-            destination: `/app/${roomUuid}`,
+            destination: `/app/${roomUuid}/webRTC`,
             body: JSON.stringify({
               from: findUseruuid(),
               type: 'answer',
@@ -176,14 +163,15 @@ export default function StudyRoom() {
       answer: (message) => {
         try {
           if (!pcRef.current) return;
-          pcRef.current.setRemoteDescription(message.sdp);
+          const answer = new RTCSessionDescription(message.sdp);
+          pcRef.current.setRemoteDescription(answer);
         } catch (err) {
           console.log(err);
         }
       },
       ice: (ice) => {
         if (!pcRef.current) return;
-        pcRef.current.addIceCandidate(ice);
+        pcRef.current.addIceCandidate(new RTCIceCandidate(ice.candidate));
       },
     }),
     [],
@@ -204,7 +192,7 @@ export default function StudyRoom() {
         await pcRef.current.setLocalDescription(offer);
         console.log('sent the offer');
         socketRef.current.publish({
-          destination: `/app/${roomUuid}`,
+          destination: `/app/${roomUuid}/webRTC`,
           body: JSON.stringify({
             from: findUseruuid(),
             type: 'offer',
@@ -223,9 +211,12 @@ export default function StudyRoom() {
     }
     console.log('sent the ice');
     socketRef.current.publish({
-      from: findUseruuid(),
-      type: 'ice',
-      candidate: event.candidate,
+      destination: `/app/${roomUuid}/webRTC`,
+      body: JSON.stringify({
+        from: findUseruuid(),
+        type: 'ice',
+        candidate: event.candidate,
+      }),
     });
   }
 
@@ -244,6 +235,12 @@ export default function StudyRoom() {
       <CssBaseline />
       <IconButton
         onClick={() => {
+          if (!myWebCamRef.current) return;
+          const stream = myWebCamRef.current.srcObject as MediaStream;
+          stream.getAudioTracks().forEach((track: MediaStreamTrack) => {
+            // eslint-disable-next-line no-param-reassign
+            track.enabled = !track.enabled;
+          });
           setAudioStatus(!audioStatus);
         }}
       >
@@ -251,6 +248,12 @@ export default function StudyRoom() {
       </IconButton>
       <IconButton
         onClick={() => {
+          if (!myWebCamRef.current) return;
+          const stream = myWebCamRef.current.srcObject as MediaStream;
+          stream.getVideoTracks().forEach((track: MediaStreamTrack) => {
+            // eslint-disable-next-line no-param-reassign
+            track.enabled = !track.enabled;
+          });
           setVideoStatus(!videoStatus);
         }}
       >
