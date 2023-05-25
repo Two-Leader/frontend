@@ -267,32 +267,7 @@ export default function StudyRoom() {
   return (
     <Box>
       <CssBaseline />
-      <IconButton
-        onClick={() => {
-          if (!myWebCamRef.current) return;
-          const stream = myWebCamRef.current.srcObject as MediaStream;
-          stream.getAudioTracks().forEach((track: MediaStreamTrack) => {
-            // eslint-disable-next-line no-param-reassign
-            track.enabled = !track.enabled;
-          });
-          setAudioStatus(!audioStatus);
-        }}
-      >
-        {audioStatus ? <Mic /> : <MicOff />}
-      </IconButton>
-      <IconButton
-        onClick={() => {
-          if (!myWebCamRef.current) return;
-          const stream = myWebCamRef.current.srcObject as MediaStream;
-          stream.getVideoTracks().forEach((track: MediaStreamTrack) => {
-            // eslint-disable-next-line no-param-reassign
-            track.enabled = !track.enabled;
-          });
-          setVideoStatus(!videoStatus);
-        }}
-      >
-        {videoStatus ? <Videocam /> : <VideocamOff />}
-      </IconButton>
+
       <Box>
         <video id="myWebCam" autoPlay playsInline ref={myWebCamRef}>
           <track
@@ -304,6 +279,32 @@ export default function StudyRoom() {
           />
         </video>
         <Box>
+          <IconButton
+            onClick={() => {
+              if (!myWebCamRef.current) return;
+              setAudioStatus(!audioStatus);
+              const stream = myWebCamRef.current.srcObject as MediaStream;
+              stream.getAudioTracks().forEach((track: MediaStreamTrack) => {
+                // eslint-disable-next-line no-param-reassign
+                track.enabled = audioStatus;
+              });
+            }}
+          >
+            {audioStatus ? <Mic /> : <MicOff />}
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              if (!myWebCamRef.current) return;
+              setVideoStatus(!videoStatus);
+              const stream = myWebCamRef.current.srcObject as MediaStream;
+              stream.getVideoTracks().forEach((track: MediaStreamTrack) => {
+                // eslint-disable-next-line no-param-reassign
+                track.enabled = !videoStatus;
+              });
+            }}
+          >
+            {videoStatus ? <Videocam /> : <VideocamOff />}
+          </IconButton>
           <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
             <InputLabel>Video</InputLabel>
             <Select>
