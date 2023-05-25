@@ -35,37 +35,64 @@ export default function StudyRoom() {
   const [userUuid, setUserUuid] = useState<string>('');
   const [videoStatus, setVideoStatus] = useState<boolean>(true);
   const [audioStatus, setAudioStatus] = useState<boolean>(true);
-  const webCamRef = useRef<any>();
-  const peerWebCamRef = useRef<any>();
-  const client = useRef<any>({});
+  const myWebCamRef = useRef<HTMLVideoElement>(null);
+  const peerWebCamRef = useRef<HTMLVideoElement>(null);
+  const socketRef = useRef<any>({});
+  const pcRef = useRef<RTCPeerConnection>();
   // const [remoteUser, setRemoteUser] = useState<boolean>(false);
 
   let myPeerConnection: RTCPeerConnection;
-  let myStream: MediaStream;
+  // let myStream: MediaStream;
   let myWebCam: HTMLVideoElement;
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (roomUuid) {
-      findUseruuid();
+    findUseruuid();
 
-      axios.get(`${BASE_URL}/studies/${roomUuid}`).catch((err) => {
+    // socket connect
+    socketRef.current = new Client({
+      brokerURL: `${BASE_URL_WS}/websocket`,
+
+      onConnect: () => {
+        socketSubscribe();
+      },
+      onStompError: (frame) => {
+        console.error(frame);
+      },
+    });
+
+    pcRef.current = new RTCPeerConnection(peerConnectionConfig);
+
+    socketRef.current.activate();
+
+    axios
+      .get(`${BASE_URL}/studies/${roomUuid}`)
+      .then((res) => {
+        if (res.data.data.checkUser) {
+          createOffer();
+        }
+      })
+      .catch((err) => {
+        console.log(err);
         if (err.response.status === 400) {
           alert('존재하지 않는 방입니다.');
           navigate('/');
+        } else {
+          alert('무슨 문제가 생김');
+          console.log(err);
         }
       });
-    }
-    myWebCam = document.getElementById('myWebCam') as HTMLVideoElement;
+
     getMedia();
-    socketConnect();
-
-    return () => socketDisconnect();
-  }, []);
-
-  const onUserMedia = useCallback(() => {
-    createPeerConnection();
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.deactivate();
+      }
+      if (pcRef.current) {
+        pcRef.current.close();
+      }
+    };
   }, []);
 
   const findUseruuid = () => {
@@ -78,53 +105,42 @@ export default function StudyRoom() {
     return userUuidFromSession;
   };
 
-  async function getMedia() {
+  const getMedia = async () => {
     try {
-      myStream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
-      if (myWebCam && myStream) {
-        myWebCam.srcObject = myStream;
-        await createPeerConnection();
+      if (myWebCamRef.current && stream) {
+        myWebCamRef.current.srcObject = stream;
       }
+      if (!(pcRef.current && socketRef.current)) {
+        return;
+      }
+      stream.getTracks().forEach((track) => {
+        if (!pcRef.current) {
+          return;
+        }
+        pcRef.current.addTrack(track, stream);
+      });
+      pcRef.current.onicecandidate = handleICECandidateEvent;
+      pcRef.current.ontrack = handleTrackEvent;
     } catch (err) {
       console.log(err);
     }
-  }
+  };
 
   /* ============= WebSocket 관련 ============ */
-  // Socket Connect
-  const socketConnect = () => {
-    // 연결할 때
-    client.current = new Client({
-      brokerURL: `${BASE_URL_WS}/websocket`,
-
-      onConnect: () => {
-        socketSubscribe();
-      },
-      onStompError: (frame) => {
-        console.error(frame);
-      },
-    });
-
-    client.current.activate(); // 클라이언트 활성화
-  };
-
-  const socketDisconnect = () => {
-    // 연결이 끊겼을 때
-    client.current.deactivate();
-  };
 
   const socketSubscribe = () => {
     // 연결 후 구독
-    client.current.subscribe(`/topic/${roomUuid}`, handleWebSocketMessage);
+    socketRef.current.subscribe(`/topic/${roomUuid}`, handleWebSocketMessage);
   };
 
   const handleWebSocketMessage = (message: IMessage) => {
     const payload = JSON.parse(message.body);
     if (payload && payload.from !== findUseruuid()) {
-      console.log('sucess', payload.type);
+      console.log('getMessage :', payload.type);
       const handler = messageHandlers[payload.type];
       if (handler) {
         handler(payload);
@@ -134,49 +150,40 @@ export default function StudyRoom() {
 
   const messageHandlers = useMemo<MessageHandlers>(
     () => ({
-      offer: (message) => {
-        console.log(message);
-        if (message.sdp) {
-          try {
-            console.log(myPeerConnection);
-            myPeerConnection
-              .setRemoteDescription(new RTCSessionDescription(message.sdp))
-              .then(() => {
-                return myPeerConnection.createAnswer();
-              })
-              .then((answer) => {
-                return myPeerConnection.setLocalDescription(answer);
-              })
-              .then(() => {
-                client.current.publish({
-                  destination: `/app/${roomUuid}/offer`,
-                  body: JSON.stringify({
-                    from: findUseruuid(),
-                    type: 'answer',
-                    sdp: myPeerConnection.localDescription,
-                  }),
-                });
-              });
-          } catch (err) {
-            console.log(err);
-          }
+      offer: async (message) => {
+        if (!(pcRef.current && socketRef.current)) {
+          return;
+        }
+        try {
+          await pcRef.current.setRemoteDescription(
+            new RTCSessionDescription(message.sdp),
+          );
+          const answer = await pcRef.current.createAnswer();
+          await pcRef.current.setLocalDescription(answer);
+          console.log('sent the answer');
+          socketRef.current.publish({
+            destination: `/app/${roomUuid}`,
+            body: JSON.stringify({
+              from: findUseruuid(),
+              type: 'answer',
+              sdp: answer,
+            }),
+          });
+        } catch (err) {
+          console.log(err);
         }
       },
       answer: (message) => {
-        console.log(myPeerConnection, message);
-        console.log(peerWebCamRef.current.srcObject);
-        console.log(webCamRef.current.srcObject);
         try {
-          myPeerConnection.setRemoteDescription(
-            new RTCSessionDescription(message.sdp),
-          );
+          if (!pcRef.current) return;
+          pcRef.current.setRemoteDescription(message.sdp);
         } catch (err) {
           console.log(err);
         }
       },
       ice: (ice) => {
-        console.log(ice);
-        myPeerConnection.addIceCandidate(ice);
+        if (!pcRef.current) return;
+        pcRef.current.addIceCandidate(ice);
       },
     }),
     [],
@@ -186,61 +193,48 @@ export default function StudyRoom() {
 
   /* ============= WebRTC 관련 ============ */
 
-  const createPeerConnection = () => {
-    if (myStream) {
-      myPeerConnection = new RTCPeerConnection(peerConnectionConfig);
-      myPeerConnection.onicecandidate = handleICECandidateEvent;
-      myPeerConnection.ontrack = handleTrackEvent;
-      myStream
-        .getTracks()
-        .forEach((track: MediaStreamTrack) =>
-          myPeerConnection.addTrack(track, myStream),
-        );
-      handleNegotiationNeededEvent();
+  const createOffer = () => {
+    if (!(pcRef.current && socketRef.current)) {
+      return;
     }
+    pcRef.current
+      .createOffer()
+      .then(async (offer) => {
+        if (!pcRef.current) return;
+        await pcRef.current.setLocalDescription(offer);
+        console.log('sent the offer');
+        socketRef.current.publish({
+          destination: `/app/${roomUuid}`,
+          body: JSON.stringify({
+            from: findUseruuid(),
+            type: 'offer',
+            sdp: offer,
+          }),
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
-  function handleNegotiationNeededEvent() {
-    if (client.current.connected && myPeerConnection) {
-      myPeerConnection
-        .createOffer()
-        .then((offer) => {
-          return myPeerConnection.setLocalDescription(offer);
-        })
-        .then(() => {
-          client.current.publish({
-            destination: `/app/${roomUuid}/offer`,
-            body: JSON.stringify({
-              from: findUseruuid(),
-              type: 'offer',
-              sdp: myPeerConnection.localDescription,
-            }),
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  }
-
   function handleICECandidateEvent(event: { candidate: any }) {
-    if (client.current.connected && event.candidate) {
-      client.current.publish({
-        from: findUseruuid(),
-        type: 'ice',
-        candidate: event.candidate,
-      });
+    if (!(socketRef.current.connected && event.candidate)) {
+      return;
     }
+    console.log('sent the ice');
+    socketRef.current.publish({
+      from: findUseruuid(),
+      type: 'ice',
+      candidate: event.candidate,
+    });
   }
 
   function handleTrackEvent(event: any) {
-    const [stream] = event.streams;
-    const peerWebCam = document.getElementById(
-      'remoteUser',
-    ) as HTMLVideoElement;
-    peerWebCam.srcObject = stream;
-
-    // console.log(peerWebCam);
+    if (peerWebCamRef.current) {
+      console.log('success track');
+      const [stream] = event.streams;
+      peerWebCamRef.current.srcObject = stream;
+    }
   }
 
   /* ============= WebRTC 관련 ============ */
@@ -250,30 +244,20 @@ export default function StudyRoom() {
       <CssBaseline />
       <IconButton
         onClick={() => {
-          myStream.getAudioTracks().forEach((track: { enabled: boolean }) => {
-            // eslint-disable-next-line no-param-reassign
-            track.enabled = !track.enabled;
-            setAudioStatus(!audioStatus);
-          });
-          console.log(myStream.getAudioTracks());
+          setAudioStatus(!audioStatus);
         }}
       >
         {audioStatus ? <Mic /> : <MicOff />}
       </IconButton>
       <IconButton
         onClick={() => {
-          myStream.getVideoTracks().forEach((track: { enabled: boolean }) => {
-            // eslint-disable-next-line no-param-reassign
-            track.enabled = !track.enabled;
-            setVideoStatus(!videoStatus);
-          });
-          console.log(myStream.getVideoTracks());
+          setVideoStatus(!videoStatus);
         }}
       >
         {videoStatus ? <Videocam /> : <VideocamOff />}
       </IconButton>
       <Box>
-        <video id="myWebCam" autoPlay playsInline ref={webCamRef}>
+        <video id="myWebCam" autoPlay playsInline ref={myWebCamRef}>
           <track
             kind="captions"
             src="captions_en.vtt"
@@ -282,23 +266,18 @@ export default function StudyRoom() {
             default
           />
         </video>
-        {/* <Webcam
-          mirrored
-          audio
-          ref={webCamRef}
-          onUserMedia={onUserMedia}
-          videoConstraints={videoConstraints}
-        /> */}
       </Box>
-      <video id="remoteUser" autoPlay playsInline ref={peerWebCamRef}>
-        <track
-          kind="captions"
-          src="captions_en.vtt"
-          srcLang="en"
-          label="English"
-          default
-        />
-      </video>
+      <Box>
+        <video id="peerWebCam" autoPlay playsInline ref={peerWebCamRef}>
+          <track
+            kind="captions"
+            src="captions_en.vtt"
+            srcLang="en"
+            label="English"
+            default
+          />
+        </video>
+      </Box>
     </Box>
   );
 }
