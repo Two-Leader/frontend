@@ -1,6 +1,14 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import Webcam from 'react-webcam';
-import { Box, Button, IconButton } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+} from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { Await, useMatch, useNavigate } from 'react-router-dom';
@@ -38,6 +46,9 @@ export default function StudyRoom() {
   const peerWebCamRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<any>({});
   const pcRef = useRef<RTCPeerConnection>();
+  const [videos, setVideos] = useState<any>([]);
+  const [audios, setAudios] = useState<any>([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -113,6 +124,29 @@ export default function StudyRoom() {
       });
       pcRef.current.onicecandidate = handleICECandidateEvent;
       pcRef.current.ontrack = handleTrackEvent;
+
+      await getCameras();
+      await getAudios();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter((device) => device.kind === 'videoinput');
+      setVideos(cameras);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getAudios = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audios = devices.filter((device) => device.kind === 'audioinput');
+      setAudios(audios);
     } catch (err) {
       console.log(err);
     }
@@ -269,6 +303,24 @@ export default function StudyRoom() {
             default
           />
         </video>
+        <Box>
+          <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+            <InputLabel>Video</InputLabel>
+            <Select>
+              {videos.map((video: any) => (
+                <MenuItem key={video.key}>{video.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+            <InputLabel>Audio</InputLabel>
+            <Select>
+              {audios.map((audio: any) => (
+                <MenuItem key={audio.key}>{audio.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
       </Box>
       <Box>
         <video id="peerWebCam" autoPlay playsInline ref={peerWebCamRef}>
