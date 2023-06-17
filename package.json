@@ -17,12 +17,15 @@
     "@types/uuid": "^9.0.1",
     "axios": "^1.4.0",
     "bootstrap": "^5.2.3",
+    "kurento-utils": "^7.0.0",
+    "openvidu-browser": "^2.27.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.4",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.11.1",
     "react-scripts": "5.0.1",
     "react-webcam": "^7.0.1",
+    "recoil": "^0.7.7",
     "socket.io-client": "^4.6.1",
     "socketjs-client": "^1.0.2",
     "sockjs-client": "^1.6.1",
@@ -53,6 +56,7 @@
     ]
   },
   "devDependencies": {
+    "@types/kurento-utils": "^6.7.1",
     "@types/node": "^18.16.3",
     "@types/react": "^18.2.4",
     "@types/react-dom": "^18.2.3",
