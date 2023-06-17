@@ -1,8 +1,8 @@
-import { OpenVidu } from "openvidu-browser";
-import { getToken } from "../lib/OpenviduApi";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { OpenVidu } from 'openvidu-browser';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getToken } from './OpenviduApi';
 
-export const useOpenvidu = (userId: number, meetingRoomId: number, gender: string) => {
+export const useOpenvidu = (userUuid: string, roomUuid: string) => {
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [publisher, setPublisher] = useState<any>();
   const [session, setSession] = useState<any>();
@@ -18,47 +18,58 @@ export const useOpenvidu = (userId: number, meetingRoomId: number, gender: strin
 
   useEffect(() => {
     const openVidu = new OpenVidu();
-    let session = openVidu.initSession();
+    const session = openVidu.initSession();
 
-    session.on("streamCreated", (event) => {
-      const subscriber = session.subscribe(event.stream, "");
+    session.on('streamCreated', (event) => {
+      const subscriber = session.subscribe(event.stream, '');
       const data = JSON.parse(event.stream.connection.data);
+      console.log(data);
       setSubscribers((prev) => {
         return [
-          ...(prev.filter((it) => it.userId !== +data.userId)),
-          { streamManager: subscriber, userId: +data.userId, gender: data.gender },
+          ...prev.filter((it) => it.userUuid !== +data.userUuid),
+          {
+            streamManager: subscriber,
+            userUuid: +data.userUuid,
+          },
         ];
       });
       console.log(subscribers);
     });
 
-    session.on("streamDestroyed", (event) => {
+    session.on('streamDestroyed', (event) => {
       event.preventDefault();
 
       const data = JSON.parse(event.stream.connection.data);
-      setSubscribers((prev) => prev.filter((it) => it.userId !== +data.userId));
+      setSubscribers((prev) =>
+        prev.filter((it) => it.userUuid !== +data.userUuid),
+      );
     });
 
-    session.on("exception", (exception) => {
+    session.on('exception', (exception) => {
       console.warn(exception);
     });
 
-    getToken(String(meetingRoomId)).then((token) => {
+    getToken(roomUuid).then((token) => {
       session!
-        .connect(token, JSON.stringify({ userId, gender }))
+        .connect(token, JSON.stringify({ userUuid }))
         .then(async () => {
-          await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+          await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true,
+          });
           const devices = await openVidu.getDevices();
-          const videoDevices = devices.filter((device) => device.kind === "videoinput");
+          const videoDevices = devices.filter(
+            (device) => device.kind === 'videoinput',
+          );
 
-          const publisher = openVidu.initPublisher("", {
+          const publisher = openVidu.initPublisher('', {
             audioSource: undefined,
             videoSource: videoDevices[0].deviceId,
             publishAudio: true,
             publishVideo: true,
-            resolution: "640x480",
+            resolution: '640x480',
             frameRate: 30,
-            insertMode: "APPEND",
+            insertMode: 'APPEND',
             mirror: false,
           });
 
@@ -66,7 +77,11 @@ export const useOpenvidu = (userId: number, meetingRoomId: number, gender: strin
           session.publish(publisher);
         })
         .catch((error) => {
-          console.log("There was an error connecting to the session:", error.code, error.message);
+          console.log(
+            'There was an error connecting to the session:',
+            error.code,
+            error.message,
+          );
         });
     });
 
@@ -79,12 +94,12 @@ export const useOpenvidu = (userId: number, meetingRoomId: number, gender: strin
       setPublisher(null);
       setSubscribers([]);
     };
-  }, [gender, meetingRoomId, userId]);
+  }, [roomUuid, userUuid]);
 
   useEffect(() => {
-    window.addEventListener("beforeunload", () => leaveSession());
+    window.addEventListener('beforeunload', () => leaveSession());
     return () => {
-      window.removeEventListener("beforeunload", () => leaveSession());
+      window.removeEventListener('beforeunload', () => leaveSession());
     };
   }, [leaveSession]);
 
@@ -92,19 +107,19 @@ export const useOpenvidu = (userId: number, meetingRoomId: number, gender: strin
     (status: boolean) => {
       publisher?.publishVideo(status);
     },
-    [publisher]
+    [publisher],
   );
 
   const onChangeMicStatus = useCallback(
     (status: boolean) => {
       publisher?.publishAudio(status);
     },
-    [publisher]
+    [publisher],
   );
 
   const streamList = useMemo(
-    () => [{ streamManager: publisher, userId, gender }, ...subscribers],
-    [gender, publisher, subscribers, userId]
+    () => [{ streamManager: publisher, userUuid }, ...subscribers],
+    [publisher, subscribers, userUuid],
   );
 
   return {

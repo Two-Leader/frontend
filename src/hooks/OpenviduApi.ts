@@ -1,17 +1,20 @@
 import axios from 'axios';
 import { OPENVIDU_SERVER_SECRET, OPENVIDU_SERVER_URL } from './BaseUrl';
 
-export function getToken(roomId: string): Promise<any> {
-  return createSession(roomId).then((roomId) => createToken(roomId));
+export async function getToken(roomUuid: string): Promise<any> {
+  const session = await createSession(roomUuid);
+  return createToken(session);
 }
 
-function createSession(roomId: string): Promise<any> {
+function createSession(roomUuid: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    var data = JSON.stringify({ customSessionId: roomId });
+    const data = JSON.stringify({ customSessionId: roomUuid });
     axios
+      // eslint-disable-next-line prefer-template
       .post(OPENVIDU_SERVER_URL + '/openvidu/api/sessions', data, {
         headers: {
           Authorization:
+            // eslint-disable-next-line prefer-template
             'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
           'Content-Type': 'application/json',
         },
@@ -21,34 +24,36 @@ function createSession(roomId: string): Promise<any> {
         resolve(response.data.id);
       })
       .catch((response) => {
-        var error = Object.assign({}, response);
+        const error = Object.assign(response);
         if (error?.response?.status === 409) {
-          resolve(roomId);
+          resolve(roomUuid);
         } else {
           console.log(error);
           console.warn(
-            'No connection to OpenVidu Server. This may be a certificate error at ' +
-              OPENVIDU_SERVER_URL,
+            `No connection to OpenVidu Server. This may be a certificate error at ${OPENVIDU_SERVER_URL}`,
           );
-          window.location.assign(OPENVIDU_SERVER_URL + '/accept-certificate');
+          // eslint-disable-next-line prefer-template
+          window.location.assign(`${OPENVIDU_SERVER_URL}/accept-certificate`);
         }
       });
   });
 }
 
-function createToken(roomId: string): Promise<any> {
+function createToken(roomUuid: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    var data = {};
+    const data = {};
     axios
       .post(
+        // eslint-disable-next-line prefer-template
         OPENVIDU_SERVER_URL +
           '/openvidu/api/sessions/' +
-          roomId +
-          '/connections',
+          roomUuid +
+          '/connection',
         data,
         {
           headers: {
             Authorization:
+              // eslint-disable-next-line prefer-template
               'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SERVER_SECRET),
             'Content-Type': 'application/json',
           },

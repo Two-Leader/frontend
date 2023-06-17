@@ -13,67 +13,52 @@ import axios from 'axios';
 import { useMatch, useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
-import { BASE_URL, BASE_URL_WS } from 'lib/BaseUrl';
+import { BASE_URL } from 'hooks/BaseUrl';
 import { Mic, MicOff, Videocam, VideocamOff } from '@mui/icons-material';
 import Webcam from 'react-webcam';
+import { useOpenvidu } from 'hooks/UseOpenVidu';
+import { useWebSocket } from 'hooks/useWebSocket';
+import { StreamManager } from 'openvidu-browser';
+import WebCamItem from 'component/WebCamItem';
 
-interface webSocketMessage {
-  from: string;
-  code: string;
-  candidate: any;
-  sdp: any;
-}
-
-type MessageHandler = (payload: webSocketMessage) => void;
+type MessageHandler = (payload: any) => void;
 type MessageHandlers = Record<string, MessageHandler>;
 
-const videoConstraints = {
-  facingMode: 'user',
-};
-
-const peerConnectionConfig = {
-  iceServers: [
-    { urls: 'stun:stun.stunprotocol.org:3478' },
-    { urls: 'stun:stun.l.google.com:19302' },
-  ],
-};
-
 export default function StudyRoom() {
-  const roomUuid = useMatch('/studyRooms/:roomUuid')?.params.roomUuid;
-  const myWebCamRef = useRef<HTMLVideoElement>(null);
+  const [webCamStatus, setWebCamStatus] = useState<boolean>(true);
+  const [micStatus, setMicStatus] = useState<boolean>(true);
+  const [roomUuid, setRoomUuid] = useState<string>(
+    useMatch('/studyRooms/:roomUuid')!.params.roomUuid!,
+  );
+  const [userUuid, setUserUuid] = useState<string>(
+    sessionStorage.getItem(`${roomUuid}`)!,
+  );
   const socketRef = useRef<any>({});
+
+  const { publisher, streamList, onChangeCameraStatus, onChangeMicStatus } =
+    useOpenvidu(userUuid, roomUuid);
+  const pickUserStreamManager = useMemo(
+    () => streamList.find((it) => it.streamManager !== publisher),
+    [publisher, streamList],
+  );
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const myUuid = findUseruuid();
-
-    // socket connect
-    socketRef.current = new Client({
-      brokerURL: `${BASE_URL_WS}/websocket`,
-
-      onConnect: () => {
-        // 연결 후 구독
-        socketRef.current.subscribe(`/topic/${myUuid}`, handleWebSocketMessage);
-      },
-      onStompError: (frame) => {
-        console.error(frame);
-      },
-    });
-
-    socketRef.current.activate();
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.deactivate();
-      }
-    };
-  }, []);
+  useWebSocket({
+    onConnect(frame, client) {
+      client.subscribe(`/topic/${roomUuid}`, function (message) {
+        handleWebSocketMessage(message);
+      });
+    },
+    beforeDisconnected(frame, client) {
+      sendMessage('', 'leave');
+    },
+  });
 
   const findUseruuid = () => {
     const userUuidFromSession = sessionStorage.getItem(`${roomUuid}`);
     if (!userUuidFromSession) {
-      navigate(`/studyRooms/${roomUuid}/users`);
+      return navigate(`/studyRooms/${roomUuid}/users`);
     }
     return userUuidFromSession;
   };
@@ -113,15 +98,33 @@ export default function StudyRoom() {
   }
   /* ============= WebSocket 관련 ============ */
 
-  /* ============= WebRTC 관련 ============ */
-
-  /* ============= WebRTC 관련 ============ */
-
   return (
     <Box>
       <CssBaseline />
       <Box>
-        <Webcam />
+        {publisher &&
+          streamList.map((stream, idx) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <WebCamItem key={idx} streamManager={stream.streamManager} />
+          ))}
+      </Box>
+      <Box>
+        <IconButton
+          onClick={() => {
+            onChangeMicStatus(!micStatus);
+            setMicStatus(!micStatus);
+          }}
+        >
+          {micStatus ? <Mic /> : <MicOff />}
+        </IconButton>
+        <IconButton
+          onClick={() => {
+            onChangeCameraStatus(!webCamStatus);
+            setWebCamStatus(!webCamStatus);
+          }}
+        >
+          {webCamStatus ? <Videocam /> : <VideocamOff />}
+        </IconButton>
       </Box>
     </Box>
   );
