@@ -1,40 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Stomp from '@stomp/stompjs';
 import { WS_BASE_URL } from './BaseUrl';
 
 interface Param {
   onConnect: (frame: Stomp.Frame, client: Stomp.Client) => void;
-  beforeDisconnected: (frame: Stomp.Frame, client: Stomp.Client) => void;
   reconnectDelay?: number;
 }
 
 export const useWebSocket = (param: Param) => {
   const [connected, setConnected] = useState<boolean>(false);
+  const stompClient = useRef<Stomp.Client>();
 
   useEffect(() => {
-    let stompClient: Stomp.Client | undefined;
     const config: Stomp.StompConfig = {
       brokerURL: `${WS_BASE_URL}/websocket`,
       reconnectDelay: param.reconnectDelay ? param.reconnectDelay : 5000,
       onConnect: (frame) => {
         console.log('소켓 연결 성공!!', frame);
         setConnected(true);
-        param.onConnect(frame, stompClient!);
-      },
-      onDisconnect: (frame) => {
-        console.log('소켓 연결 끊음!!', frame);
-        setConnected(false);
-        param.beforeDisconnected(frame, stompClient!);
+        param.onConnect(frame, stompClient.current!);
       },
       logRawCommunication: false,
     };
-    stompClient = new Stomp.Client(config);
-    stompClient.activate();
+    stompClient.current = new Stomp.Client(config);
+    stompClient.current.activate();
 
     return () => {
-      stompClient?.deactivate();
+      stompClient.current?.deactivate();
     };
   }, []);
 
-  return connected;
+  return { stompClient, connected };
 };

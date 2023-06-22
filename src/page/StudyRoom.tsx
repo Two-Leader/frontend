@@ -20,23 +20,39 @@ import { useOpenvidu } from 'hooks/UseOpenVidu';
 import { useWebSocket } from 'hooks/useWebSocket';
 import { StreamManager } from 'openvidu-browser';
 import WebCamItem from 'component/WebCamItem';
+import PublisherWebCamItem from 'component/PublisherWebCamItem';
 
 type MessageHandler = (payload: any) => void;
 type MessageHandlers = Record<string, MessageHandler>;
+interface Message {
+  userUuid: string | null;
+  userName: string | null;
+  message: string | null;
+}
 
 export default function StudyRoom() {
   const [webCamStatus, setWebCamStatus] = useState<boolean>(true);
   const [micStatus, setMicStatus] = useState<boolean>(true);
-  const [roomUuid, setRoomUuid] = useState<string>(
-    useMatch('/studyRooms/:roomUuid')!.params.roomUuid!,
-  );
-  const [userUuid, setUserUuid] = useState<string>(
+  const roomUuid = useMatch('/studyRooms/:roomUuid')!.params.roomUuid as string;
+  const { userUuid, userName } = JSON.parse(
     sessionStorage.getItem(`${roomUuid}`)!,
   );
-  const socketRef = useRef<any>({});
 
   const { publisher, streamList, onChangeCameraStatus, onChangeMicStatus } =
-    useOpenvidu(userUuid, roomUuid);
+    useOpenvidu(userUuid, userName, roomUuid);
+
+  const { stompClient, connected } = useWebSocket({
+    onConnect(frame, client) {
+      client.subscribe(`/topic/${roomUuid}`, function (message) {
+        handleWebSocketMessage(message);
+      });
+
+      client.publish({
+        destination: `/app/join/${userUuid}`,
+      });
+    },
+  });
+
   const pickUserStreamManager = useMemo(
     () => streamList.find((it) => it.streamManager !== publisher),
     [publisher, streamList],
@@ -44,68 +60,79 @@ export default function StudyRoom() {
 
   const navigate = useNavigate();
 
-  useWebSocket({
-    onConnect(frame, client) {
-      client.subscribe(`/topic/${roomUuid}`, function (message) {
-        handleWebSocketMessage(message);
+  useEffect(() => {
+    axios
+      .get(`${BASE_URL}/studies/${roomUuid}`)
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        alert('해당 스터디방은 없는 방입니다. 다시 확인부탁드립니다.');
+        navigate('/');
       });
-    },
-    beforeDisconnected(frame, client) {
-      sendMessage('', 'leave');
-    },
-  });
-
-  const findUseruuid = () => {
-    const userUuidFromSession = sessionStorage.getItem(`${roomUuid}`);
-    if (!userUuidFromSession) {
-      return navigate(`/studyRooms/${roomUuid}/users`);
+    if (!sessionStorage.getItem(`${roomUuid}`)) {
+      alert('로그인이 되어있지 않습니다. 로그인 후 이용바랍니다.');
+      navigate(`/studyRooms/${roomUuid}/users`);
     }
-    return userUuidFromSession;
-  };
+  }, []);
 
   /* ============= WebSocket 관련 ============ */
 
   const handleWebSocketMessage = (message: IMessage) => {
     const payload = JSON.parse(message.body);
-    if (payload && payload.from !== findUseruuid()) {
-      console.log('getMessage :', payload.code);
+    if (payload) {
+      console.log('getMessage :', payload);
       const handler = messageHandlers[payload.code];
       if (handler) {
-        handler(payload);
+        handler(payload.data);
       }
     }
   };
 
   const messageHandlers = useMemo<MessageHandlers>(
     () => ({
-      WEBRTC_SUCCESS_ADDED_STUDYROOM_USER: (message) => {
-        console.log(message);
-      },
-      WEBRTC_SUCCESS_GET_STUDYROOM_USERS: (message) => {
+      WEBSOCKET_SUCCESS_GET_MESSAGE: (message) => {
         console.log(message);
       },
     }),
     [],
   );
 
-  function sendMessage(message: string | null, path: string) {
+  function sendMessage(path: string, message: Message) {
     const jsonMessage = JSON.stringify(message);
     console.log('SEND message', path, jsonMessage);
-    socketRef.current.publish({
-      destination: `/app/${path}/${roomUuid}`,
-      body: jsonMessage,
-    });
+    if (stompClient.current) {
+      stompClient.current.publish({
+        destination: `/app/${path}/${roomUuid}`,
+        body: jsonMessage,
+      });
+    }
   }
+
   /* ============= WebSocket 관련 ============ */
+
+  const btnClick = () => {
+    stompClient.current?.deactivate();
+  };
 
   return (
     <Box>
       <CssBaseline />
+      <Button onClick={btnClick} />
+      <Box>
+        {publisher && (
+          <PublisherWebCamItem streamManager={publisher.stream.streamManager} />
+        )}
+      </Box>
       <Box>
         {publisher &&
           streamList.map((stream, idx) => (
             // eslint-disable-next-line react/no-array-index-key
-            <WebCamItem key={idx} streamManager={stream.streamManager} />
+            <WebCamItem
+              key={stream.userUuid}
+              streamManager={stream.streamManager}
+              name={stream.userName}
+            />
           ))}
       </Box>
       <Box>

@@ -7,10 +7,11 @@ import MicOffIcon from '@mui/icons-material/MicOff';
 
 interface WebcamItemProps {
   streamManager: StreamManager;
-  name: string | null;
 }
 
-export default function WebCamItem({ streamManager, name }: WebcamItemProps) {
+export default function PublisherWebCamItem({
+  streamManager,
+}: WebcamItemProps) {
   const { videoRef, speaking, micStatus, videoStatus } =
     useStream(streamManager);
 
@@ -19,8 +20,7 @@ export default function WebCamItem({ streamManager, name }: WebcamItemProps) {
   }
   return (
     <div>
-      {name && <p>{name}</p>}
-      <video id="peerWebCam" ref={videoRef}>
+      <video id="myWebCam" ref={videoRef}>
         <track
           kind="captions"
           src="captions_en.vtt"
@@ -29,12 +29,6 @@ export default function WebCamItem({ streamManager, name }: WebcamItemProps) {
           default
         />
       </video>
-      <Box>
-        {!micStatus && <MicOffIcon style={{ width: '32px', color: 'red' }} />}
-        {!videoStatus && (
-          <VideocamOffIcon style={{ width: '32px', color: 'red' }} />
-        )}
-      </Box>
     </div>
   );
 }

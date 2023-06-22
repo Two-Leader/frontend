@@ -2,8 +2,18 @@ import { OpenVidu } from 'openvidu-browser';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getToken } from './OpenviduApi';
 
-export const useOpenvidu = (userUuid: string, roomUuid: string) => {
-  const [subscribers, setSubscribers] = useState<any[]>([]);
+interface subscribeInterface {
+  streamManager: any;
+  userUuid: string;
+  userName: string | null;
+}
+
+export const useOpenvidu = (
+  userUuid: string,
+  userName: string,
+  roomUuid: string,
+) => {
+  const [subscribers, setSubscribers] = useState<subscribeInterface[]>([]);
   const [publisher, setPublisher] = useState<any>();
   const [session, setSession] = useState<any>();
 
@@ -23,17 +33,16 @@ export const useOpenvidu = (userUuid: string, roomUuid: string) => {
     session.on('streamCreated', (event) => {
       const subscriber = session.subscribe(event.stream, '');
       const data = JSON.parse(event.stream.connection.data);
-      console.log(data);
       setSubscribers((prev) => {
         return [
-          ...prev.filter((it) => it.userUuid !== +data.userUuid),
+          ...prev.filter((it) => it.userUuid !== data.userUuid),
           {
             streamManager: subscriber,
-            userUuid: +data.userUuid,
+            userUuid: data.userUuid,
+            userName: data.userName,
           },
         ];
       });
-      console.log(subscribers);
     });
 
     session.on('streamDestroyed', (event) => {
@@ -41,7 +50,7 @@ export const useOpenvidu = (userUuid: string, roomUuid: string) => {
 
       const data = JSON.parse(event.stream.connection.data);
       setSubscribers((prev) =>
-        prev.filter((it) => it.userUuid !== +data.userUuid),
+        prev.filter((it) => it.userUuid !== data.userUuid),
       );
     });
 
@@ -51,12 +60,8 @@ export const useOpenvidu = (userUuid: string, roomUuid: string) => {
 
     getToken(roomUuid).then((token) => {
       session!
-        .connect(token, JSON.stringify({ userUuid }))
+        .connect(token, JSON.stringify({ userUuid, userName }))
         .then(async () => {
-          await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: true,
-          });
           const devices = await openVidu.getDevices();
           const videoDevices = devices.filter(
             (device) => device.kind === 'videoinput',
@@ -70,7 +75,7 @@ export const useOpenvidu = (userUuid: string, roomUuid: string) => {
             resolution: '640x480',
             frameRate: 30,
             insertMode: 'APPEND',
-            mirror: false,
+            mirror: true,
           });
 
           setPublisher(publisher);
@@ -117,10 +122,7 @@ export const useOpenvidu = (userUuid: string, roomUuid: string) => {
     [publisher],
   );
 
-  const streamList = useMemo(
-    () => [{ streamManager: publisher, userUuid }, ...subscribers],
-    [publisher, subscribers, userUuid],
-  );
+  const streamList = useMemo(() => [...subscribers], [subscribers]);
 
   return {
     publisher,
