@@ -4,12 +4,12 @@ import { getToken } from './OpenviduApi';
 
 interface subscribeInterface {
   streamManager: any;
-  userUuid: string;
+  userId: string;
   userName: string | null;
 }
 
 export const useOpenvidu = (
-  userUuid: string,
+  userId: string,
   userName: string,
   roomUuid: string,
 ) => {
@@ -35,10 +35,10 @@ export const useOpenvidu = (
       const data = JSON.parse(event.stream.connection.data);
       setSubscribers((prev) => {
         return [
-          ...prev.filter((it) => it.userUuid !== data.userUuid),
+          ...prev.filter((it) => it.userId !== data.userId),
           {
             streamManager: subscriber,
-            userUuid: data.userUuid,
+            userId: data.userId,
             userName: data.userName,
           },
         ];
@@ -49,9 +49,7 @@ export const useOpenvidu = (
       event.preventDefault();
 
       const data = JSON.parse(event.stream.connection.data);
-      setSubscribers((prev) =>
-        prev.filter((it) => it.userUuid !== data.userUuid),
-      );
+      setSubscribers((prev) => prev.filter((it) => it.userId !== data.userId));
     });
 
     session.on('exception', (exception) => {
@@ -60,7 +58,7 @@ export const useOpenvidu = (
 
     getToken(roomUuid).then((token) => {
       session!
-        .connect(token, JSON.stringify({ userUuid, userName }))
+        .connect(token, JSON.stringify({ userId, userName }))
         .then(async () => {
           const devices = await openVidu.getDevices();
           const videoDevices = devices.filter(
@@ -99,7 +97,7 @@ export const useOpenvidu = (
       setPublisher(null);
       setSubscribers([]);
     };
-  }, [roomUuid, userUuid]);
+  }, [roomUuid, userId]);
 
   useEffect(() => {
     window.addEventListener('beforeunload', () => leaveSession());

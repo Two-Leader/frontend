@@ -25,7 +25,7 @@ import PublisherWebCamItem from 'component/PublisherWebCamItem';
 type MessageHandler = (payload: any) => void;
 type MessageHandlers = Record<string, MessageHandler>;
 interface Message {
-  userUuid: string | null;
+  userId: string | null;
   userName: string | null;
   message: string | null;
 }
@@ -34,12 +34,12 @@ export default function StudyRoom() {
   const [webCamStatus, setWebCamStatus] = useState<boolean>(true);
   const [micStatus, setMicStatus] = useState<boolean>(true);
   const roomUuid = useMatch('/studyRooms/:roomUuid')!.params.roomUuid as string;
-  const { userUuid, userName } = JSON.parse(
+  const { userId, userName } = JSON.parse(
     sessionStorage.getItem(`${roomUuid}`)!,
   );
 
   const { publisher, streamList, onChangeCameraStatus, onChangeMicStatus } =
-    useOpenvidu(userUuid, userName, roomUuid);
+    useOpenvidu(userId, userName, roomUuid);
 
   const { stompClient, connected } = useWebSocket({
     onConnect(frame, client) {
@@ -48,7 +48,7 @@ export default function StudyRoom() {
       });
 
       client.publish({
-        destination: `/app/join/${userUuid}`,
+        destination: `/app/join/${userId}`,
       });
     },
   });
@@ -129,7 +129,7 @@ export default function StudyRoom() {
           streamList.map((stream, idx) => (
             // eslint-disable-next-line react/no-array-index-key
             <WebCamItem
-              key={stream.userUuid}
+              key={stream.userId}
               streamManager={stream.streamManager}
               name={stream.userName}
             />

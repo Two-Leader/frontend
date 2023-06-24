@@ -27,14 +27,14 @@ export default function UserInfo() {
       return;
     }
     axios
-      .post(`${BASE_URL}/users`, {
+      .post(`${BASE_URL}/room-users/${roomUuid}`, {
         userName: userNameValue,
-        roomUuid: `${roomUuid}`,
+        userUuid: sessionStorage.getItem('token'),
       })
       .then((response) => {
         if (response.status === 201) {
           const data = {
-            userUuid: response.data.data.userUuid,
+            userId: response.data.data.userId,
             userName: response.data.data.userName,
           };
           sessionStorage.setItem(`${roomUuid}`, JSON.stringify(data));
