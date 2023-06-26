@@ -11,6 +11,7 @@ module.exports = {
     'plugin:prettier/recommended',
   ],
   rules: {
+    'global-require': 0,
     'linebreak-style': 0,
     'import/prefer-default-export': 0,
     'import/extensions': 0,
