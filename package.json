@@ -24,7 +24,6 @@
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.4",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.10.1",
     "react-router-dom": "^6.11.1",
     "react-scripts": "5.0.1",
     "react-webcam": "^7.0.1",
@@ -32,7 +31,6 @@
     "socket.io-client": "^4.6.1",
     "socketjs-client": "^1.0.2",
     "sockjs-client": "^1.6.1",
-    "styled-components": "^5.3.10",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -64,7 +62,6 @@
     "@types/node": "^18.16.3",
     "@types/react": "^18.2.4",
     "@types/react-dom": "^18.2.3",
-    "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "eslint": "^8.39.0",
     "eslint-config-airbnb": "^19.0.4",
