@@ -1,9 +1,11 @@
+import { Button } from 'react-bootstrap';
 import { NavLink as Link } from 'react-router-dom';
+import { text } from 'stream/consumers';
 import styled from 'styled-components';
 
 export const Nav = styled.nav`
   background: #fff;
-  height: 60px;
+  height: 50px;
   display: flex;
   justify-content: space-between;
   padding: 0.5rem calc((100vw - 1300px) / 2);
@@ -36,7 +38,31 @@ export const NavBtn = styled.nav`
     display: none;
   }
 `;
+export const FormBtnLink = styled(Link)`
+  border-radius: 20px;
+  background: #3b71ca;
+  padding: 10px 20px;
+  margin-top: 20px;
+  color: #fff;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  font-size: 16px;
+  font-family: 'Pretendard-Medium';
+  width: 430px;
+  text-align: center;
 
+  /* Second Nav */
+  margin-left: 10px;
+
+  &:hover {
+    transition: all 0.2s ease-in-out;
+    background: #204c95;
+    color: #fff;
+  }
+`;
 export const NavBtnLink = styled(Link)`
   border-radius: 20px;
   background: #3b71ca;
@@ -47,6 +73,8 @@ export const NavBtnLink = styled(Link)`
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   text-decoration: none;
+  font-size: 16px;
+  font-family: 'Pretendard-Medium';
 
   /* Second Nav */
   margin-left: 10px;
@@ -56,4 +84,23 @@ export const NavBtnLink = styled(Link)`
     background: #204c95;
     color: #fff;
   }
+`;
+export const Btn = styled(Link)`
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 1px;
+  padding: 3px;
+  color: #3b71ca;
+  text-decoration-line: none;
+  font-family: 'Pretendard-Bold';
+`;
+export const BtnSpan = styled.span`
+  font-size: 16px;
+  color: #000;
+  text-decoration-line: none;
+  font-family: 'Pretendard-Medium';
+`;
+export const BtnDiv = styled.div`
+  text-align: center;
+  width: 100%;
 `;

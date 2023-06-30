@@ -5,10 +5,24 @@ import axios from 'axios';
 import { Form, Modal } from 'react-bootstrap';
 import { BASE_URL } from 'hooks/BaseUrl';
 import StudyRoomModal from 'component/StudyRoomModal';
+import { Translate } from '@mui/icons-material';
 import logo from '../assets/logo.svg';
+import plus from '../assets/plusbutton.svg';
+import studyroom from '../assets/studyroom.svg';
 import banner from '../assets/banner.svg';
 import { Nav, NavLink, NavBtn, NavBtnLink } from './Navbar';
-import { Banner, BannerOne, BannerTwo, BannerThree } from './BannerElement';
+import {
+  Banner,
+  BannerOne,
+  BannerTwo,
+  BannerThree,
+  Round,
+  RoundCenter,
+  RoundText,
+  FlexStudyRoom,
+  FlexDiv,
+} from './BannerElement';
+import LoginModal from '../component/LoginModal';
 
 interface StudyRoomProps {
   roomUuid: string;
@@ -16,11 +30,21 @@ interface StudyRoomProps {
 }
 
 export default function Home() {
+  const [typedText, setTypedText] = useState('');
   const [studyRoomItems, setStudyRoomItems] = useState<StudyRoomProps[]>([]);
 
   const [showStudyRoomModal, setShowStudyRoomModal] = useState<boolean>(false);
   const handleStudyRoomModalClose = () => setShowStudyRoomModal(false);
   const handleStudyRoomModalShow = () => setShowStudyRoomModal(true);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleLoginButtonClick = () => {
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
 
   const studyRoomDatas = useCallback(() => {
     axios
@@ -39,6 +63,26 @@ export default function Home() {
     studyRoomDatas();
   }, [studyRoomDatas]);
 
+  useEffect(() => {
+    const content = 'Face-to-Face';
+    let i = 0;
+
+    const typingInterval = setInterval(() => {
+      if (i < content.length) {
+        const txt = content.charAt(i);
+        setTypedText((prevText) => prevText + txt);
+        // eslint-disable-next-line no-plusplus
+        i++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(typingInterval);
+    };
+  }, []);
+
   return (
     <div>
       <Nav>
@@ -46,15 +90,20 @@ export default function Home() {
           <img src={logo} alt="logo" />
         </NavLink>
         <NavBtn>
-          <NavBtnLink to="/signin">Login</NavBtnLink>
-          <NavBtnLink to="/signin">Sign Up</NavBtnLink>
+          <NavBtnLink to="/" onClick={handleLoginButtonClick}>
+            LOGIN
+          </NavBtnLink>
+          <NavBtnLink to="/">SIGNUP</NavBtnLink>
         </NavBtn>
+
+        <LoginModal showModal={showModal} handleCloseModal={handleCloseModal} />
       </Nav>
       <Banner>
         <BannerOne>
           Connect & Communicate
           <br />
-          Face-to-Face
+          {/* Face-to-Face */}
+          {typedText}
         </BannerOne>
         <BannerTwo>
           멤버들과 실시간으로 소통하며, 공부 자료를 공유하는 온라인 스터디를
@@ -64,6 +113,49 @@ export default function Home() {
           <img src={banner} alt="logo" />
         </BannerThree>
       </Banner>
+      <RoundText>user.name의 스터디</RoundText>
+      <RoundCenter>
+        <Round>
+          <img src={plus} alt="plus" />
+        </Round>
+      </RoundCenter>
+      <RoundText>스터디 찾기</RoundText>
+      <FlexStudyRoom>
+        {[...Array(5)].map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <React.Fragment key={index}>
+            <FlexDiv>
+              <span
+                style={{
+                  marginBottom: '72%',
+                  marginRight: '50%',
+                  color: '#fff',
+                }}
+              >
+                3 / 5
+              </span>
+            </FlexDiv>
+          </React.Fragment>
+        ))}
+      </FlexStudyRoom>
+      {/* <FlexStudyRoom>
+        {[...Array(5)].map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <React.Fragment key={index}>
+            <img src={studyroom} alt="studyroom" />
+            <span
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                transform: 'translate(-50%, -50%)',
+                flexDirection: 'column',
+              }}
+            >
+              3/5
+            </span>
+          </React.Fragment>
+        ))}
+      </FlexStudyRoom> */}
     </div>
     //   <Box>
     //   <CssBaseline />
