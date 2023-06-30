@@ -1,0 +1,25 @@
+@font-face {
+    font-family: "Pretendard-Bold";
+    font-style: normal;
+    src: url("./Pretendard-Bold.ttf") format("ttf");
+  }
+  @font-face {
+    font-family: "Pretendard-SemiBold";
+    font-style: normal;
+    src: url("./Pretendard-SemiBold.ttf") format("ttf");
+  }
+  @font-face {
+    font-family: "Pretendard-Regular";
+    font-style: normal;
+    src: url("./Pretendard-Regular.ttf") format("ttf");
+  }
+  @font-face {
+    font-family: "Pretendard-Medium";
+    font-style: normal;
+    src: url("./Pretendard-Medium.ttf") format("ttf");
+  }
+  @font-face {
+    font-family: "Pretendard-Light";
+    font-style: normal;
+    src: url("./Pretendard-Light.ttf") format("ttf");
+  }
