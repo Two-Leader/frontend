@@ -186,12 +186,14 @@ import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/Navbar';
 interface LoginModalProps {
   showModal: boolean;
   handleCloseModal: () => void;
+  handleSignupFromLogin: () => void;
 }
 
 // eslint-disable-next-line react/function-component-definition
 const LoginModal: React.FunctionComponent<LoginModalProps> = ({
   showModal,
   handleCloseModal,
+  handleSignupFromLogin,
 }) => {
   return (
     <Modal show={showModal} onHide={handleCloseModal}>
@@ -203,7 +205,7 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
         <Form>
           <Form.Group>
             <Form.Label />
-            <Form.Control placeholder="아이디" />
+            <Form.Control placeholder="이메일" />
           </Form.Group>
           <Form.Group>
             <Form.Label />
@@ -211,15 +213,17 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
           </Form.Group>
           <NavBtn>
             <FormBtnLink to="/" onClick={handleCloseModal}>
-              LOGIN
+              로그인
             </FormBtnLink>
           </NavBtn>
         </Form>
       </Modal.Body>
       <Modal.Footer>
         <BtnDiv>
-          <BtnSpan> 회원이 아니신가요?</BtnSpan>
-          <Btn to="/signup">회원가입</Btn>
+          <BtnSpan>회원이 아니신가요?</BtnSpan>
+          <Btn to="/" onClick={handleSignupFromLogin}>
+            회원가입
+          </Btn>
         </BtnDiv>
       </Modal.Footer>
     </Modal>

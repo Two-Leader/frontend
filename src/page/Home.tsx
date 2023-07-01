@@ -23,6 +23,7 @@ import {
   FlexDiv,
 } from './BannerElement';
 import LoginModal from '../component/LoginModal';
+import SignUpModal, { SignUpModalProps } from '../component/SignUpModal';
 
 interface StudyRoomProps {
   roomUuid: string;
@@ -36,14 +37,32 @@ export default function Home() {
   const [showStudyRoomModal, setShowStudyRoomModal] = useState<boolean>(false);
   const handleStudyRoomModalClose = () => setShowStudyRoomModal(false);
   const handleStudyRoomModalShow = () => setShowStudyRoomModal(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleLoginButtonClick = () => {
-    setShowModal(true);
+    setShowLoginModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
+  const handleSignupButtonClick = () => {
+    setShowSignupModal(true);
+  };
+
+  const handleLoginCloseModal = () => {
+    setShowLoginModal(false);
+  };
+
+  const handleSignupCloseModal = () => {
+    setShowSignupModal(false);
+  };
+
+  const handleLoginFromSignup = () => {
+    setShowLoginModal(true);
+    setShowSignupModal(false);
+  };
+  const handleSignupFromLogin = () => {
+    setShowSignupModal(true);
+    setShowLoginModal(false);
   };
 
   const studyRoomDatas = useCallback(() => {
@@ -93,10 +112,22 @@ export default function Home() {
           <NavBtnLink to="/" onClick={handleLoginButtonClick}>
             LOGIN
           </NavBtnLink>
-          <NavBtnLink to="/">SIGNUP</NavBtnLink>
+          <NavBtnLink to="/" onClick={handleSignupButtonClick}>
+            SIGNUP
+          </NavBtnLink>
         </NavBtn>
 
-        <LoginModal showModal={showModal} handleCloseModal={handleCloseModal} />
+        <LoginModal
+          showModal={showLoginModal}
+          handleCloseModal={handleLoginCloseModal}
+          handleSignupFromLogin={handleSignupFromLogin}
+        />
+
+        <SignUpModal
+          showModal={showSignupModal}
+          handleCloseModal={handleSignupCloseModal}
+          handleLoginFromSignup={handleLoginFromSignup}
+        />
       </Nav>
       <Banner>
         <BannerOne>
