@@ -1,6 +1,7 @@
 import { NavLink as Link } from 'react-router-dom';
 import styled from 'styled-components';
 import studyroomImage from '../assets/studyroom.svg';
+import mystudyroomImage from '../assets/mystudyroomImage.svg';
 
 export const Banner = styled.div`
   background: #181d23;
@@ -48,7 +49,8 @@ export const Round = styled.div`
   border-radius: 20px;
   background: #fff;
   padding: 10px 20px;
-  height: 200px;
+  margin-top: 10px;
+  height: 250px;
   width: 80vw;
   box-shadow: 2px 2px 3px 1px rgba(0, 0, 0, 0.2);
 `;
@@ -88,7 +90,26 @@ export const FlexDiv = styled.div`
   margin-right: 1rem;
   width: 240px;
   height: 220px;
+  margin-top: 10px;
   background-image: url(${studyroomImage});
   background-color: rgba(0, 0, 0, 0.4);
   border-radius: 20px;
+`;
+export const FlexMyDiv = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-flow: row nowrap;
+  margin-right: 1rem;
+  width: 240px;
+  height: 220px;
+  background-image: url(${mystudyroomImage});
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+`;
+export const RoundTwo = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 10%;
+  margin-left: 2%;
 `;

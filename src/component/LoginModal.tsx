@@ -212,7 +212,7 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
             <Form.Control placeholder="비밀번호" />
           </Form.Group>
           <NavBtn>
-            <FormBtnLink to="/" onClick={handleCloseModal}>
+            <FormBtnLink to="/LoginHome" onClick={handleCloseModal}>
               로그인
             </FormBtnLink>
           </NavBtn>

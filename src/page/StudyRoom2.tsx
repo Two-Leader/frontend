@@ -30,7 +30,7 @@ interface Message {
   message: string | null;
 }
 
-export default function StudyRoom() {
+export default function StudyRoom2() {
   const [webCamStatus, setWebCamStatus] = useState<boolean>(true);
   const [micStatus, setMicStatus] = useState<boolean>(true);
   const roomUuid = useMatch('/studyRooms/:roomUuid')!.params.roomUuid as string;

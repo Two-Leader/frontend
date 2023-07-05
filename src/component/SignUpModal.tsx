@@ -30,7 +30,7 @@ const SignUpModal: React.FunctionComponent<SignUpModalProps> = ({
           </Form.Group>
           <Form.Group>
             <Form.Label />
-            <Form.Control placeholder="아이디" />
+            <Form.Control placeholder="이메일" />
           </Form.Group>
           <Form.Group>
             <Form.Label />
