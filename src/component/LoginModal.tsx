@@ -181,7 +181,7 @@ import React from 'react';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import { BASE_URL } from 'hooks/BaseUrl';
-import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/Navbar';
+import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/css/Navbar';
 
 interface LoginModalProps {
   showModal: boolean;
@@ -212,7 +212,7 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
             <Form.Control placeholder="비밀번호" />
           </Form.Group>
           <NavBtn>
-            <FormBtnLink to="/" onClick={handleCloseModal}>
+            <FormBtnLink to="/LoginHome" onClick={handleCloseModal}>
               로그인
             </FormBtnLink>
           </NavBtn>

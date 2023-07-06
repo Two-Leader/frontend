@@ -10,7 +10,7 @@ import logo from '../assets/logo.svg';
 import plus from '../assets/plusbutton.svg';
 import studyroom from '../assets/studyroom.svg';
 import banner from '../assets/banner.svg';
-import { Nav, NavLink, NavBtn, NavBtnLink } from './Navbar';
+import { Nav, NavLink, NavBtn, NavBtnLink } from './css/Navbar';
 import {
   Banner,
   BannerOne,
@@ -21,7 +21,7 @@ import {
   RoundText,
   FlexStudyRoom,
   FlexDiv,
-} from './BannerElement';
+} from './css/BannerElement';
 import LoginModal from '../component/LoginModal';
 import SignUpModal, { SignUpModalProps } from '../component/SignUpModal';
 

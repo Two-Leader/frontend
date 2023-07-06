@@ -51,7 +51,7 @@ export const FormBtnLink = styled(Link)`
   text-decoration: none;
   font-size: 16px;
   font-family: 'Pretendard-Medium';
-  width: 430px;
+  width: 450px;
   text-align: center;
 
   /* Second Nav */
