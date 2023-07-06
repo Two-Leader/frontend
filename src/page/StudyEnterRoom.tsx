@@ -4,7 +4,7 @@ import axios from 'axios';
 import { BASE_URL } from 'hooks/BaseUrl';
 import Webcam from 'react-webcam';
 import logo from '../assets/logo.svg';
-import { Nav, NavLink, NavBtn, NavBtnLink, FormBtnLink } from './Navbar';
+import { Nav, NavLink, NavBtn, NavBtnLink, FormBtnLink } from './css/Navbar';
 import {
   Round,
   RoundTwo,
@@ -13,7 +13,7 @@ import {
   FlexStudyRoom,
   FlexDiv,
   FlexMyDiv,
-} from './BannerElement';
+} from './css/BannerElement';
 
 export default function StudyEnterRoom() {
   return (
@@ -25,17 +25,17 @@ export default function StudyEnterRoom() {
       </Nav>
       <RoundTwo>
         <Webcam />
-        <form>
+        <form style={{ marginLeft: '20px', justifyContent: 'center' }}>
           <div className="form-group">
             <label />
             <input
               type="name"
-              className="form-control"
+              className="form-control w-60"
               placeholder="Enter UserName"
             />
           </div>
           <NavBtn>
-            <FormBtnLink to="/">입장</FormBtnLink>
+            <FormBtnLink to="/StudyRoom">입장</FormBtnLink>
           </NavBtn>
         </form>
       </RoundTwo>

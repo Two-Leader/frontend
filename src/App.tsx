@@ -4,6 +4,7 @@ import './App.css';
 import Home from 'page/Home';
 import StudyEnterRoom from 'page/StudyEnterRoom';
 import LoginHome from 'page/AfterLoginHome';
+import StudyRoom from 'page/StudyRoom';
 import UserInfo from 'page/UserInfo';
 // import HeaderItem from 'component/HeaderItem';
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/LoginHome" element={<LoginHome />} />
         <Route path="/StudyEnterRoom" element={<StudyEnterRoom />} />
+        <Route path="/StudyRoom" element={<StudyRoom />} />
         {/* <Route path="/studyRooms/:roomUuid/users" element={<UserInfo />} />
         <Route path="/studyRooms/:roomUuid" element={<StudyRoom />} /> */}
       </Routes>

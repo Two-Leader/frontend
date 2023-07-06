@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import { BASE_URL } from 'hooks/BaseUrl';
-import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/Navbar';
+import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/css/Navbar';
 import LoginModal from './LoginModal';
 
 export interface SignUpModalProps {

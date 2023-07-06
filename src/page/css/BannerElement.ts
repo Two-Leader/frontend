@@ -1,7 +1,7 @@
 import { NavLink as Link } from 'react-router-dom';
 import styled from 'styled-components';
-import studyroomImage from '../assets/studyroom.svg';
-import mystudyroomImage from '../assets/mystudyroomImage.svg';
+import studyroomImage from 'assets/studyroom.svg';
+import mystudyroomImage from 'assets/mystudyroomImage.svg';
 
 export const Banner = styled.div`
   background: #181d23;
@@ -110,6 +110,6 @@ export const FlexMyDiv = styled.div`
 export const RoundTwo = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-top: 10%;
-  margin-left: 2%;
 `;

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from 'hooks/BaseUrl';
 import logo from '../assets/logo.svg';
-import { Nav, NavLink, NavBtn, NavBtnLink } from './Navbar';
+import { Nav, NavLink, NavBtn, NavBtnLink } from './css/Navbar';
 import {
   Round,
   RoundCenter,
@@ -10,7 +10,7 @@ import {
   FlexStudyRoom,
   FlexDiv,
   FlexMyDiv,
-} from './BannerElement';
+} from './css/BannerElement';
 import StudyModal from '../component/StudyModal';
 
 interface StudyRoomProps {
