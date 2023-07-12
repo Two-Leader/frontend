@@ -101,9 +101,7 @@ export const ExitBtnLink = styled(Link)`
   font-size: 16px;
   font-family: 'Pretendard-Medium';
   text-align: center;
-
-  /* Second Nav */
-  margin-left: 10px;
+  margin-left: 80%;
 
   &:hover {
     transition: all 0.2s ease-in-out;
@@ -113,8 +111,8 @@ export const ExitBtnLink = styled(Link)`
 `;
 export const WebcamContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 50%);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 49%);
   gap: 10px;
   margin-left: 8%;
   margin-top: 13px;

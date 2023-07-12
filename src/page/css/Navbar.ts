@@ -76,9 +76,6 @@ export const NavBtnLink = styled(Link)`
   font-size: 16px;
   font-family: 'Pretendard-Medium';
 
-  /* Second Nav */
-  margin-left: 10px;
-
   &:hover {
     transition: all 0.2s ease-in-out;
     background: #204c95;
