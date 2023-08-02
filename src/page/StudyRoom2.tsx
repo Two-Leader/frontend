@@ -24,11 +24,6 @@ import PublisherWebCamItem from 'component/PublisherWebCamItem';
 
 type MessageHandler = (payload: any) => void;
 type MessageHandlers = Record<string, MessageHandler>;
-interface Message {
-  userId: string | null;
-  userName: string | null;
-  message: string | null;
-}
 
 export default function StudyRoom2() {
   const [webCamStatus, setWebCamStatus] = useState<boolean>(true);
@@ -40,18 +35,6 @@ export default function StudyRoom2() {
 
   const { publisher, streamList, onChangeCameraStatus, onChangeMicStatus } =
     useOpenvidu(userId, userName, roomUuid);
-
-  const { stompClient, connected } = useWebSocket({
-    onConnect(frame, client) {
-      client.subscribe(`/topic/${roomUuid}`, function (message) {
-        handleWebSocketMessage(message);
-      });
-
-      client.publish({
-        destination: `/app/join/${userId}`,
-      });
-    },
-  });
 
   const pickUserStreamManager = useMemo(
     () => streamList.find((it) => it.streamManager !== publisher),
@@ -77,6 +60,17 @@ export default function StudyRoom2() {
   }, []);
 
   /* ============= WebSocket 관련 ============ */
+  const { stompClient, connected } = useWebSocket({
+    onConnect(frame, client) {
+      client.subscribe(`/topic/${roomUuid}`, function (message) {
+        handleWebSocketMessage(message);
+      });
+
+      client.publish({
+        destination: `/app/join/${userId}`,
+      });
+    },
+  });
 
   const handleWebSocketMessage = (message: IMessage) => {
     const payload = JSON.parse(message.body);
@@ -98,12 +92,16 @@ export default function StudyRoom2() {
     [],
   );
 
-  function sendMessage(path: string, message: Message) {
-    const jsonMessage = JSON.stringify(message);
-    console.log('SEND message', path, jsonMessage);
+  function sendMessage(message: String) {
+    const jsonMessage = JSON.stringify({
+      roomUuid: roomUuid,
+      userId: userId,
+      message: message,
+    });
+    console.log('SEND message', jsonMessage);
     if (stompClient.current) {
       stompClient.current.publish({
-        destination: `/app/${path}/${roomUuid}`,
+        destination: `/app/chat`,
         body: jsonMessage,
       });
     }
