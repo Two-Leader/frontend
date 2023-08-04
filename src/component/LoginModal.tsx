@@ -177,7 +177,8 @@
 //     </MDBModal>
 //   );
 // }
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import { BASE_URL } from 'hooks/BaseUrl';
@@ -195,6 +196,26 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
   handleCloseModal,
   handleSignupFromLogin,
 }) => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const onClickLogin = () => {
+    axios
+      .post(`${BASE_URL}/users/login`, {
+        email,
+        password,
+      })
+      .then((res) => {
+        sessionStorage.setItem('nickName', res.data.data.nickName);
+        sessionStorage.setItem('token', res.data.data.nickName);
+        handleCloseModal();
+      })
+      .catch((err) => {
+        if (err.response.data.businessCode === 'U002') {
+          alert('이메일 또는 비밀번호가 틀렸습니다. 다시 확인해주십시오.');
+        }
+      });
+  };
+
   return (
     <Modal show={showModal} onHide={handleCloseModal}>
       <Modal.Header closeButton>
@@ -205,11 +226,21 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
         <Form>
           <Form.Group>
             <Form.Label />
-            <Form.Control placeholder="이메일" />
+            <Form.Control
+              placeholder="이메일"
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
+            />
           </Form.Group>
           <Form.Group>
             <Form.Label />
-            <Form.Control placeholder="비밀번호" />
+            <Form.Control
+              placeholder="비밀번호"
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+            />
           </Form.Group>
           <NavBtn>
             <FormBtnLink to="/LoginHome" onClick={handleCloseModal}>
