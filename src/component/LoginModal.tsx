@@ -182,7 +182,7 @@ import axios from 'axios';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import { BASE_URL } from 'hooks/BaseUrl';
-import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/Navbar';
+import { NavBtn, Btn, FormBtnLink, BtnSpan, BtnDiv } from '../page/css/Navbar';
 
 interface LoginModalProps {
   showModal: boolean;
@@ -243,7 +243,7 @@ const LoginModal: React.FunctionComponent<LoginModalProps> = ({
             />
           </Form.Group>
           <NavBtn>
-            <FormBtnLink to="/" onClick={onClickLogin}>
+            <FormBtnLink to="/LoginHome" onClick={handleCloseModal}>
               로그인
             </FormBtnLink>
           </NavBtn>
