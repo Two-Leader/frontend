@@ -15,7 +15,6 @@ import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
 import { BASE_URL } from 'hooks/BaseUrl';
 import { Mic, MicOff, Videocam, VideocamOff } from '@mui/icons-material';
-import Webcam from 'react-webcam';
 import { useOpenvidu } from 'hooks/UseOpenVidu';
 import { useWebSocket } from 'hooks/useWebSocket';
 import { StreamManager } from 'openvidu-browser';

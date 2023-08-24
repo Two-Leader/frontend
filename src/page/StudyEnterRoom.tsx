@@ -35,7 +35,7 @@ export default function StudyEnterRoom() {
             />
           </div>
           <NavBtn>
-            <FormBtnLink to="/StudyRoom">입장</FormBtnLink>
+            <FormBtnLink to="/ChatRoom">입장</FormBtnLink>
           </NavBtn>
         </form>
       </RoundTwo>

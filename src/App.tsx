@@ -6,6 +6,7 @@ import StudyEnterRoom from 'page/StudyEnterRoom';
 import LoginHome from 'page/AfterLoginHome';
 import StudyRoom from 'page/StudyRoom';
 import UserInfo from 'page/UserInfo';
+import ChatRoom from 'page/ChatRoom';
 // import HeaderItem from 'component/HeaderItem';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/LoginHome" element={<LoginHome />} />
         <Route path="/StudyEnterRoom" element={<StudyEnterRoom />} />
         <Route path="/StudyRoom" element={<StudyRoom />} />
+        <Route path="/ChatRoom" element={<ChatRoom />} />
         {/* <Route path="/studyRooms/:roomUuid/users" element={<UserInfo />} />
         <Route path="/studyRooms/:roomUuid" element={<StudyRoom />} /> */}
       </Routes>
