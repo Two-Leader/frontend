@@ -1,14 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Button, CssBaseline, List } from '@mui/material';
-import StudyRoomItem from 'component/StudyRoomItem';
 import axios from 'axios';
-import { Form, Modal } from 'react-bootstrap';
 import { BASE_URL } from 'hooks/BaseUrl';
-import StudyRoomModal from 'component/StudyRoomModal';
-import { Translate } from '@mui/icons-material';
 import logo from '../assets/logo.svg';
 import plus from '../assets/plusbutton.svg';
-import studyroom from '../assets/studyroom.svg';
 import banner from '../assets/banner.svg';
 import { Nav, NavLink, NavBtn, NavBtnLink } from './css/Navbar';
 import {
@@ -169,48 +163,6 @@ export default function Home() {
           </React.Fragment>
         ))}
       </FlexStudyRoom>
-      {/* <FlexStudyRoom>
-        {[...Array(5)].map((_, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <React.Fragment key={index}>
-            <img src={studyroom} alt="studyroom" />
-            <span
-              style={{
-                display: 'flex',
-                position: 'absolute',
-                transform: 'translate(-50%, -50%)',
-                flexDirection: 'column',
-              }}
-            >
-              3/5
-            </span>
-          </React.Fragment>
-        ))}
-      </FlexStudyRoom> */}
     </div>
-    //   <Box>
-    //   <CssBaseline />
-    //   <Box>
-    //     <List>
-    //       {studyRoomItems.map((studyRoomItem) => (
-    //         <StudyRoomItem
-    //           key={studyRoomItem.roomUuid}
-    //           roomUuid={studyRoomItem.roomUuid}
-    //           roomName={studyRoomItem.roomName}
-    //         />
-    //       ))}
-    //     </List>
-    //   </Box>
-    //   <Box>
-    //     <Button onClick={handleStudyRoomModalShow}>Create StudyRoom</Button>
-    //     {/* ============== Modal ============== */}
-    //     <StudyRoomModal
-    //       showStudyRoomModal={showStudyRoomModal}
-    //       handleStudyRoomModalClose={handleStudyRoomModalClose}
-    //       studyRoomDatas={studyRoomDatas}
-    //     />
-    //     {/* ============== Modal ============== */}
-    //   </Box>
-    // </Box>
   );
 }
